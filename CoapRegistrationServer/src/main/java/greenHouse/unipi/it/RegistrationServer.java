@@ -9,6 +9,7 @@ public class RegistrationServer extends CoapServer {
         RegistrationServer server = new RegistrationServer();
         server.add(new SQLResource("registration"));
         server.start();
+        System.out.println("\nServer starts!\n");
     }
 
 }
