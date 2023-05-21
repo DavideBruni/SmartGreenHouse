@@ -7,6 +7,8 @@ import org.eclipse.californium.core.server.resources.CoapExchange;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import java.net.InetAddress;
+
 public class SQLResource extends CoapResource {
     public SQLResource(String name) {
         super(name);
@@ -16,6 +18,9 @@ public class SQLResource extends CoapResource {
     public void handlePOST(CoapExchange exchange) {
         byte[] request = exchange.getRequestPayload();
         String s = new String(request);
+	System.out.println(s);
+	InetAddress addr = exchange.getSourceAddress();
+	System.out.println(addr);
         JSONObject json = null;
         try {
             JSONParser parser = new JSONParser();
@@ -25,7 +30,7 @@ public class SQLResource extends CoapResource {
         }
 
         Response response = null;
-        if (json.containsKey("ipAddress")){
+        if (json.containsKey("name")){
              // recupera info
              response = new Response(CoAP.ResponseCode.CREATED);
         }else{

@@ -1,6 +1,6 @@
 CONTIKI_PROJECT = coap-actuator
 all: $(CONTIKI_PROJECT)
-CONTIKI = ../../contiki-ng/
+CONTIKI = ../../../
 
 
 
