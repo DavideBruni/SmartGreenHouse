@@ -53,8 +53,8 @@ public class CLIThread extends Thread{
 
     void active_actuator(String command){
 
-        String ip = null;
-        String resource = null;
+        String ip = "[fd00::202:2:2:2]";
+        String resource = "actuator_window";
         String command_value;
 
         switch (command){
@@ -82,15 +82,7 @@ public class CLIThread extends Thread{
                 System.out.println("Invalid command");
                 return;
         }
-
-        String json_obj_str = "{\"command\":\""+command_value+"\"}";
-        JSONParser parser = new JSONParser();
-        try {
-            JSONObject json = (JSONObject) parser.parse(json_obj_str);
-            new CoapClientThread(ip,resource,json).start();
-        } catch (ParseException e) {
-            System.err.println("Something goes wrong during the activation of the actuator! :/");
-        }
+        new CoapClientThread(ip,resource,command_value);
 
     }
 }
