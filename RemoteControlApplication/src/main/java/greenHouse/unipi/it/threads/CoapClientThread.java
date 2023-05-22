@@ -22,9 +22,11 @@ public class CoapClientThread extends Thread{
         String uri = "coap://"+actuatorIp+"/"+resource;
         CoapClient client = new CoapClient(uri);
         Request req = new Request(CoAP.Code.PUT);
-        req.getOptions().addUriQuery("action="+payload);
+        //req.getOptions().addUriQuery("action="+payload);
+	req.setPayload("action="+payload);
         req.getOptions().setAccept(MediaTypeRegistry.APPLICATION_JSON);
         CoapResponse response = client.advanced(req);
+	System.out.println("Send");
         System.out.println(response.getResponseText());
     }
 }

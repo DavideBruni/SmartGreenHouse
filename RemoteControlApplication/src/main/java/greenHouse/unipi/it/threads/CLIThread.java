@@ -82,7 +82,7 @@ public class CLIThread extends Thread{
                 System.out.println("Invalid command");
                 return;
         }
-        new CoapClientThread(ip,resource,command_value);
+        new CoapClientThread(ip,resource,command_value).start();
 
     }
 }
