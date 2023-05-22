@@ -25,13 +25,16 @@ public class ResourceDAO {
         // in a real environment this mapping (or the following query) need to be changed
         switch(actuator){
             case "window":
-                resource = "window_actuator";
+                resource = "actuator_window";
                 break;
             case "sprinkler":
-                resource = "sprinkler_actuator";
+                resource = "actuator_sprinkler";
                 break;
             case "light":
-                resource = "light_actuator";
+                resource = "actuator_light";
+		break;
+	    default:
+		return resourceDAO;
         }
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
 
@@ -49,7 +52,7 @@ public class ResourceDAO {
     }
 
     public String getIp() {
-        return ip;
+        return "["+ip+"]";
     }
 
     public String getResource() {
