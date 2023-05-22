@@ -8,8 +8,17 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.net.InetAddress;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class SQLResource extends CoapResource {
+
+    private static final String url = "jdbc:mysql://localhost:3306/SmartGreenHouse";
+    private static final String username = "root";
+    private static final String password = "Mysql2023!";
+
     public SQLResource(String name) {
         super(name);
         setObservable(true);
@@ -18,9 +27,6 @@ public class SQLResource extends CoapResource {
     public void handlePOST(CoapExchange exchange) {
         byte[] request = exchange.getRequestPayload();
         String s = new String(request);
-	System.out.println(s);
-	InetAddress addr = exchange.getSourceAddress();
-	System.out.println(addr);
         JSONObject json = null;
         try {
             JSONParser parser = new JSONParser();
@@ -31,8 +37,22 @@ public class SQLResource extends CoapResource {
 
         Response response = null;
         if (json.containsKey("name")){
-             // recupera info
-             response = new Response(CoAP.ResponseCode.CREATED);
+            InetAddress addr = exchange.getSourceAddress();
+            try (Connection connection = DriverManager.getConnection(url, username, password)) {
+                PreparedStatement ps = connection.prepareStatement("INSERT INTO actuators('ip','resource') VALUES(?,?)");
+                ps.setString(1,String.valueOf(addr));
+                ps.setString(2, (String)json.get("name"));
+                ps.executeUpdate();
+                if(ps.getUpdateCount()<1){
+                    response = new Response(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
+                }else{
+                    response = new Response(CoAP.ResponseCode.CREATED);
+                }
+            } catch (SQLException e) {
+                response = new Response(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
+                System.err.println("Cannot connect the database!");
+            }
+
         }else{
             response = new Response(CoAP.ResponseCode.BAD_REQUEST);
         }
