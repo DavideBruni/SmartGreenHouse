@@ -21,7 +21,7 @@ public class SQLResource extends CoapResource {
 
     public SQLResource(String name) {
         super(name);
-        setObservable(true);
+        setObservable(true);        //TODO da controllare se setobseravable
     }
 
     public void handlePOST(CoapExchange exchange) {
@@ -51,7 +51,7 @@ public class SQLResource extends CoapResource {
                     response = new Response(CoAP.ResponseCode.CREATED);
                 }
             } catch (SQLException e) {
-		e.printStackTrace();
+
                 response = new Response(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
                 System.err.println("Cannot connect the database!");
             }

@@ -1,5 +1,6 @@
 package greenHouse.unipi.it.threads;
 
+import greenHouse.unipi.it.DAO.ResourceDAO;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -26,7 +27,7 @@ public class CLIThread extends Thread{
             switch(command){
                 case "\\help":
                     break;
-                case "\\sense":
+                case "\\sense":     //TODO meglio modificare dati i requirements in qualcosa tipo: leggi LOG
                     break;
                 case "\\action":
                     System.out.println("What do you want to do?");
@@ -52,37 +53,42 @@ public class CLIThread extends Thread{
     }
 
     void active_actuator(String command){
-
-        String ip = "[fd00::202:2:2:2]";
-        String resource = "actuator_window";
+        String ip = null;
+        String resource = null;
         String command_value;
-
+        ResourceDAO resourceDAO = null;
         switch (command){
             // per ogni commando recuperare l'ip della risorsa
             // e il name della risorsa
             case "\\window_open":
                 command_value = "open";
+                resourceDAO = ResourceDAO.retrieveInformation("window");
                 break;
             case "\\window_close":
                 command_value = "close";
+                resourceDAO = ResourceDAO.retrieveInformation("window");
                 break;
             case "\\sprinkler_active":
                 command_value = "on";
+                resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
                 break;
             case "\\sprinkler_deactivate":
                 command_value = "off";
+                resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
                 break;
             case "\\light_up":
                 command_value = "up";
+                resourceDAO = ResourceDAO.retrieveInformation("light");
                 break;
             case "\\light_down":
                 command_value = "down";
+                resourceDAO = ResourceDAO.retrieveInformation("light");
                 break;
             default:
                 System.out.println("Invalid command");
                 return;
         }
-        new CoapClientThread(ip,resource,command_value).start();
+        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), command_value).start();
 
     }
 }
