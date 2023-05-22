@@ -39,7 +39,7 @@ void client_chunk_handler(coap_message_t *response){
 
 extern coap_resource_t res_window;
 static struct etimer sleep_timer;
-static struct etimer e_timer;
+//static struct etimer e_timer;
 
 PROCESS(window_thread, "window");
 AUTOSTART_PROCESSES(&window_thread);
@@ -61,24 +61,22 @@ PROCESS_THREAD(window_thread, ev, data){
 	
 		COAP_BLOCKING_REQUEST(&server_ep, request, client_chunk_handler);
     
-	//	/* -------------- END REGISTRATION --------------*/
+		/* -------------- END REGISTRATION --------------*/
 		if(max_registration_retry == -1){		// something goes wrong more MAX_REGISTRATION_RETRY times, node goes to sleep then try again
 			etimer_set(&sleep_timer, 3000*CLOCK_SECOND);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sleep_timer));
 			max_registration_retry = MAX_REGISTRATION_RETRY;
 		}
 	}
-
-    coap_activate_resource(&res_window, "actuator_window");
-    etimer_set(&e_timer, CLOCK_SECOND * 4);
-
-    while(1) {
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&e_timer));
     
-        res_window.trigger();
-        
-        etimer_reset(&e_timer);
-    }
+    
+	coap_activate_resource(&res_window, "actuator_window");
+	/*etimer_set(&e_timer, 4*CLOCK_SECOND);
+
+	while(1) {
+		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&e_timer));
+		etimer_reset(&e_timer);
+	}*/
 	
 		
 	

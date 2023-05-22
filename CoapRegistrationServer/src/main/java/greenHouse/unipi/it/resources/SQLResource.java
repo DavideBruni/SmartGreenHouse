@@ -38,9 +38,11 @@ public class SQLResource extends CoapResource {
         Response response = null;
         if (json.containsKey("name")){
             InetAddress addr = exchange.getSourceAddress();
+		System.out.println(addr);
             try (Connection connection = DriverManager.getConnection(url, username, password)) {
-                PreparedStatement ps = connection.prepareStatement("INSERT INTO actuators('ip','resource') VALUES(?,?)");
-                ps.setString(1,String.valueOf(addr));
+		
+                PreparedStatement ps = connection.prepareStatement("INSERT INTO actuators (ip,resource) VALUES(?,?);");
+                ps.setString(1,String.valueOf(addr).substring(1));
                 ps.setString(2, (String)json.get("name"));
                 ps.executeUpdate();
                 if(ps.getUpdateCount()<1){
@@ -49,6 +51,7 @@ public class SQLResource extends CoapResource {
                     response = new Response(CoAP.ResponseCode.CREATED);
                 }
             } catch (SQLException e) {
+		e.printStackTrace();
                 response = new Response(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
                 System.err.println("Cannot connect the database!");
             }
