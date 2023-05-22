@@ -39,7 +39,6 @@ void client_chunk_handler(coap_message_t *response){
 
 extern coap_resource_t res_window;
 static struct etimer sleep_timer;
-//static struct etimer e_timer;
 
 PROCESS(window_thread, "window");
 AUTOSTART_PROCESSES(&window_thread);
@@ -71,12 +70,6 @@ PROCESS_THREAD(window_thread, ev, data){
     
     
 	coap_activate_resource(&res_window, "actuator_window");
-	/*etimer_set(&e_timer, 4*CLOCK_SECOND);
-
-	while(1) {
-		PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&e_timer));
-		etimer_reset(&e_timer);
-	}*/
 	
 		
 	
