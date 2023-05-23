@@ -32,16 +32,16 @@ public class SQLResource extends CoapResource {
             JSONParser parser = new JSONParser();
             json = (JSONObject) parser.parse(s);
         }catch (Exception err){
-            // do something
+            return; //TODO change it!
         }
 
-        Response response = null;
+        Response response;
         if (json.containsKey("name")){
             InetAddress addr = exchange.getSourceAddress();
 		System.out.println(addr);
             try (Connection connection = DriverManager.getConnection(url, username, password)) {
 		
-                PreparedStatement ps = connection.prepareStatement("INSERT INTO actuators (ip,resource) VALUES(?,?);");
+                PreparedStatement ps = connection.prepareStatement("REPLACE INTO actuators (ip,resource) VALUES(?,?);");
                 ps.setString(1,String.valueOf(addr).substring(1));
                 ps.setString(2, (String)json.get("name"));
                 ps.executeUpdate();
