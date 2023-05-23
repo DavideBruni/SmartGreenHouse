@@ -1,7 +1,5 @@
 package greenHouse.unipi.it.threads;
 
-import greenHouse.unipi.it.DAO.ResourceDAO;
-
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
