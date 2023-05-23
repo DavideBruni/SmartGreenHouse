@@ -74,6 +74,7 @@ static struct mqtt_connection conn;
 
 // Periodic timer to check the state of the MQTT client
 #define STATE_MACHINE_PERIODIC     (CLOCK_SECOND >> 1)
+#define WAIT_FOR_RECONNECTION 10
 static struct etimer e_timer;
 static struct etimer sleep_timer;
 static struct ctimer sensing_timer;
@@ -84,7 +85,7 @@ static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 static int light_value = 0;
 static int co2_value = 0;
 static int temp_value = 0;
-static uint8_t sub_num = 18;
+static uint8_t sub_num = 0;
 
 static uint8_t min_light_parameter = 4;
 static uint8_t max_light_parameter = 18;
@@ -101,7 +102,7 @@ static int is_first_pub_flag = 1;
 
 /*---------------------------------------------------------------------------*/
 
-static void pub_value(const * char topic, int value ){
+static void pub_value(const char * topic, int value){
     sprintf(pub_topic, "%s", topic);	
     sprintf(app_buffer, "%d", value); // copia il valore
     mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
@@ -111,7 +112,7 @@ static void sense_callback(void *ptr){
 	printf("I'm sensing\n");	
 	light_value++;			//TODO change to generate fake values!
     co2_value++;
-    temp_value++
+    temp_value++;
 
 	num_period++;
 	if(num_period == NUM_PERIOD_BEFORE_SEND){	
@@ -122,7 +123,7 @@ static void sense_callback(void *ptr){
 		}
 	}else if (light_value < min_light_parameter || light_value > max_light_parameter){
         pub_value("sensor/light",light_value);
-    }else if (tempvalue < min_tempparameter || tempvalue > max_tempparameter){
+    }else if (temp_value < min_temp_parameter || temp_value > max_temp_parameter){
         pub_value("sensor/temp",temp_value);
     }else if (co2_value < min_co2_parameter || co2_value > max_co2_parameter){
         pub_value("sensor/co2",co2_value);
@@ -310,10 +311,9 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
             }
                 
             if(state == STATE_SUBSCRIBED3){
-                if(state == STATE_SUBSCRIBED){
-		            if(is_first_pub_flag == 1){
-			            ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);	
-			            is_first_pub_flag = 0;	
+                if(is_first_pub_flag == 1){
+	            ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);	
+	            is_first_pub_flag = 0;	
                     }
             } else if ( state == STATE_DISCONNECTED ){
                 LOG_ERR("Disconnected from MQTT broker\n");	

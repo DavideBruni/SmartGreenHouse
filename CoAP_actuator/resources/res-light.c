@@ -15,7 +15,7 @@ static uint8_t light_status = 0; // 0 off, 1 medium brightness, 2 max brightness
 
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-RESOURCE(res_window,
+RESOURCE(res_light,
          "title=\"SmartGreenHouse: ?acutaor_light=0..\" POST/PUTaction=<action>\";rt=\"Control\";if=\"actuator\"",
          NULL,
          NULL,
@@ -32,7 +32,7 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
             if(light_status == 0){
                 leds_set(LEDS_YELLOW);
                 light_status++;
-            }else if(light_status == 0){
+            }else if(light_status == 1){
                 leds_set(LEDS_GREEN);               // send respponse back ?
                 light_status++;
             }else{
@@ -43,14 +43,14 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
                 leds_set(LEDS_YELLOW);
                 light_status--;
             }else if(light_status == 1){
-                leds_OFF(LEDS_YELLOW);               // send respponse back ?
+                leds_off(LEDS_YELLOW);               // send respponse back ?
                 light_status--;
             }else{
                 printf("Light is turned off "); // send respponse back ?
             }
 	    }else if((strncmp(action, "off", len) == 0)){
             light_status = 0;
-            leds_off(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_RED) | LEDS_NUM_TO_MASK(LEDS_YELLOW)) 
+            leds_off(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_RED) | LEDS_NUM_TO_MASK(LEDS_YELLOW)); 
 	    }else
             coap_set_status_code(response, BAD_OPTION_4_02);
     }else{
