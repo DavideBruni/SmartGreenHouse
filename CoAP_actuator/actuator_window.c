@@ -71,7 +71,7 @@ PROCESS_THREAD(window_thread, ev, data){
     
 	coap_activate_resource(&res_window, "actuator_window");
 	
-		
+	PROCESS_YIELD();	
 	
 
 PROCESS_END();

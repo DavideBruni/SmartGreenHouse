@@ -10,7 +10,7 @@
 
 // Server IP and resource path
 #define SERVER_EP "coap://[fd00::1]:5683"
-#define NODE_NAME_JSON "{\"name\":\"actuator_light\"}"
+#define NODE_NAME_JSON "{\"name\":\"actuator_sprinkler\"}"
 #define MAX_REGISTRATION_RETRY 3
 
 static coap_endpoint_t server_ep;
@@ -37,16 +37,16 @@ void client_chunk_handler(coap_message_t *response){
 
 
 
-extern coap_resource_t res_light;
+extern coap_resource_t res_sprinkler;
 static struct etimer sleep_timer;
 
-PROCESS(light_thread, "light");
-AUTOSTART_PROCESSES(&light_thread);
+PROCESS(sprinkler_thread, "sprinkler");
+AUTOSTART_PROCESSES(&sprinkler_thread);
 
-PROCESS_THREAD(light_thread, ev, data){
+PROCESS_THREAD(sprinkler_thread, ev, data){
 	
 	PROCESS_BEGIN();
-
+	leds_set(LEDS_RED);
 	while(max_registration_retry!=0){
 		/* -------------- REGISTRATION --------------*/
 		// Populate the coap_endpoint_t data structure
@@ -68,7 +68,7 @@ PROCESS_THREAD(light_thread, ev, data){
 	}
     
     
-	coap_activate_resource(&res_light, "actuator_light");
+	coap_activate_resource(&res_sprinkler, "actuator_sprinkler");
 	
 	PROCESS_YIELD();	
 	

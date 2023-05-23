@@ -250,9 +250,9 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             } else if ( state == STATE_DISCONNECTED ){
             	LOG_ERR("Disconnected from MQTT broker\n");	
             	// Recover from error: try to reconnect after WAIT_FOR_RECONNECTION seconds
-		state = STATE_INIT;
-		etimer_set(&sleep_timer, WAIT_FOR_RECONNECTION * CLOCK_SECOND);
-		continue;
+                state = STATE_INIT;
+                etimer_set(&sleep_timer, WAIT_FOR_RECONNECTION * CLOCK_SECOND);
+                continue;
             }
             
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);

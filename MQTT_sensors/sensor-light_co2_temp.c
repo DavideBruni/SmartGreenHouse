@@ -75,21 +75,64 @@ static struct mqtt_connection conn;
 // Periodic timer to check the state of the MQTT client
 #define STATE_MACHINE_PERIODIC     (CLOCK_SECOND >> 1)
 static struct etimer e_timer;
+static struct etimer sleep_timer;
+static struct ctimer sensing_timer;
 
 static mqtt_status_t status;
 static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
-static int value = 0;
-static uint8_t sub_num = 0;
+static int light_value = 0;
+static int co2_value = 0;
+static int temp_value = 0;
+static uint8_t sub_num = 18;
 
-static uint8_t min_light_parameter;
-static uint8_t max_light_parameter;
-static uint8_t min_co2_parameter;
-static uint8_t max_co2_parameter;
-static uint8_t min_temp_parameter;
-static uint8_t max_temp_parameter;
+static uint8_t min_light_parameter = 4;
+static uint8_t max_light_parameter = 18;
+static uint8_t min_co2_parameter = 22;
+static uint8_t max_co2_parameter = 50;
+static uint8_t min_temp_parameter = 18;
+static uint8_t max_temp_parameter = 22;
+
+#define SENSE_PERIOD 		5		// seconds
+#define NUM_PERIOD_BEFORE_SEND  6 		// every 30 second there's one pub
+
+static int num_period = 0;
+static int is_first_pub_flag = 1;
 
 /*---------------------------------------------------------------------------*/
+
+static void pub_value(const * char topic, int value ){
+    sprintf(pub_topic, "%s", topic);	
+    sprintf(app_buffer, "%d", value); // copia il valore
+    mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+}
+
+static void sense_callback(void *ptr){
+	printf("I'm sensing\n");	
+	light_value++;			//TODO change to generate fake values!
+    co2_value++;
+    temp_value++
+
+	num_period++;
+	if(num_period == NUM_PERIOD_BEFORE_SEND){	
+		if (state == STATE_SUBSCRIBED3){	
+            pub_value("sensor/co2",co2_value);
+            pub_value("sensor/light",light_value);
+            pub_value("sensor/temp",temp_value);	
+		}
+	}else if (light_value < min_light_parameter || light_value > max_light_parameter){
+        pub_value("sensor/light",light_value);
+    }else if (tempvalue < min_tempparameter || tempvalue > max_tempparameter){
+        pub_value("sensor/temp",temp_value);
+    }else if (co2_value < min_co2_parameter || co2_value > max_co2_parameter){
+        pub_value("sensor/co2",co2_value);
+    } 
+	if(num_period == NUM_PERIOD_BEFORE_SEND)
+		num_period = 0;		//reset
+	ctimer_reset(&sensing_timer);
+}
+
+
 PROCESS(sensor_light_co2_temp, "MQTT sensor_light_co2_temp");
 AUTOSTART_PROCESSES(&sensor_light_co2_temp);
 
@@ -196,8 +239,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
 
         PROCESS_YIELD();
 
-        if((ev == PROCESS_EVENT_TIMER && data == &e_timer) || 
-            ev == PROCESS_EVENT_POLL){
+        if((ev == PROCESS_EVENT_TIMER && data == &e_timer) || ev == PROCESS_EVENT_POLL || (ev == PROCESS_EVENT_TIMER && data == &sleep_timer)){
                             
             if(state==STATE_INIT){
                 if(have_connectivity()==true)  
@@ -268,18 +310,17 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
             }
                 
             if(state == STATE_SUBSCRIBED3){
-                // Publish something
-                sprintf(pub_topic, "%s", "sensor/light_co2_temp");
-                
-                sprintf(app_buffer, "report %d", value);    //### da togliere
-                value++;                                    //### da togliere
-                    
-                mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
-                strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
-            
+                if(state == STATE_SUBSCRIBED){
+		            if(is_first_pub_flag == 1){
+			            ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);	
+			            is_first_pub_flag = 0;	
+                    }
             } else if ( state == STATE_DISCONNECTED ){
-            LOG_ERR("Disconnected from MQTT broker\n");	
-            // Recover from error
+                LOG_ERR("Disconnected from MQTT broker\n");	
+            	// Recover from error: try to reconnect after WAIT_FOR_RECONNECTION seconds
+                state = STATE_INIT;
+                etimer_set(&sleep_timer, WAIT_FOR_RECONNECTION * CLOCK_SECOND);
+                continue;
             }
             
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
