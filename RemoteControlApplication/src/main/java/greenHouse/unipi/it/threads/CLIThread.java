@@ -37,6 +37,7 @@ public class CLIThread extends Thread{
                     System.out.println("\\sprinkler_deactivate --> to deactivate sprinkler");
                     System.out.println("\\light_up --> to increase light brightness");
                     System.out.println("\\light_down --> to decrease light brightness");
+                    System.out.println("\\light_off --> to turn off lights");
                     try {
                         command = reader.readLine();
                         active_actuator(command);
@@ -82,6 +83,10 @@ public class CLIThread extends Thread{
                 break;
             case "\\light_down":
                 command_value = "down";
+                resourceDAO = ResourceDAO.retrieveInformation("light");
+                break;
+            case "\\light_off":
+                command_value = "off";
                 resourceDAO = ResourceDAO.retrieveInformation("light");
                 break;
             default:
