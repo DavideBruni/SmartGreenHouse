@@ -153,8 +153,9 @@ static int fake_temp_sensing(){
 }
 
 static void sense_callback(void *ptr){
-    if (state != STATE_SUBSCRIBED3)
+    if (state != STATE_SUBSCRIBED3){
         return;
+    }
 
 	LOG_INFO("Sono qui!");		
     
