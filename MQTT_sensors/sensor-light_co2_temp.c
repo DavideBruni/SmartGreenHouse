@@ -11,6 +11,7 @@
 #include "dev/leds.h"
 #include "os/sys/log.h"
 #include "mqtt-client.h"
+#include "os/dev/button-hal.h"
 
 #include <string.h>
 #include <strings.h>
@@ -21,7 +22,7 @@
 #ifdef MQTT_CLIENT_CONF_LOG_LEVEL
 #define LOG_LEVEL MQTT_CLIENT_CONF_LOG_LEVEL
 #else
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -55,8 +56,8 @@ static char app_buffer[APP_BUFFER_SIZE];
 /* Various states */
 static uint8_t state;
 
-#define STATE_INIT    		    0
-#define STATE_NET_OK    	    1
+#define STATE_INIT    		0
+#define STATE_NET_OK    	1
 #define STATE_CONNECTING        2
 #define STATE_CONNECTED         3
 #define STATE_SUBSCRIBING1      4
@@ -82,17 +83,27 @@ static struct ctimer sensing_timer;
 static mqtt_status_t status;
 static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
-static int light_value = 0;
-static int co2_value = 0;
-static int temp_value = 0;
+/* Flag for simulated value */
+// 1 in range, 0 not in range
+
+static int light_in_range = 1;
+static int co2_in_range = 1;
+static int temp_in_range = 1;
+
+static int light_value = 330000;
+static int co2_value = 350;
+static int temp_value = 20;
+
 static uint8_t sub_num = 0;
 
-static uint8_t min_light_parameter = 4;
-static uint8_t max_light_parameter = 18;
-static uint8_t min_co2_parameter = 22;
-static uint8_t max_co2_parameter = 50;
-static uint8_t min_temp_parameter = 18;
-static uint8_t max_temp_parameter = 22;
+static int button_pressed = 0;
+static int flag_over_under = -1;		// -1 normal value, 0 over values, 1 under values
+static int min_light_parameter = 320000;
+static int max_light_parameter = 1000000;
+static int min_co2_parameter = 300;
+static int max_co2_parameter = 400;
+static int min_temp_parameter = 18;
+static int max_temp_parameter = 22;
 
 #define SENSE_PERIOD 		5		// seconds
 #define NUM_PERIOD_BEFORE_SEND  6 		// every 30 second there's one pub
@@ -103,33 +114,75 @@ static int is_first_pub_flag = 1;
 /*---------------------------------------------------------------------------*/
 
 static void pub_value(const char * topic, int value){
-    sprintf(pub_topic, "%s", topic);	
-    sprintf(app_buffer, "%d", value); // copia il valore
-    mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+	printf("---------- Sono qui ------------");
+	memset(pub_topic, 0, strlen(pub_topic));
+	memset(app_buffer, 0, strlen(app_buffer));
+	sprintf(pub_topic, "%s", topic);	
+	sprintf(app_buffer, "%d", value); // copia il valore
+	printf("\nPub: %d on %s \n",value,topic);
+    	mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+	
+}
+
+static int fake_light_sensing(){
+	if (light_in_range){
+		return (rand() %(max_light_parameter - min_light_parameter + 1)) + min_light_parameter;  
+	}else{
+		if(flag_over_under == -1){
+			flag_over_under = ((rand()% 10) < 5);
+		}
+		if(flag_over_under == 1){		// generate value under the min treshold
+			return (rand() % min_light_parameter);			
+		}else{				// generate value over the max treshold
+			return rand() + max_light_parameter;
+		}
+	}
+}
+
+static int fake_co2_sensing(){
+	if (co2_in_range){
+		return (rand() %(max_co2_parameter - min_co2_parameter + 1)) + min_co2_parameter;  
+	}else{
+		return (rand() % min_co2_parameter);				
+	}
+}
+
+static int fake_temp_sensing(){
+	
+	if (temp_in_range){
+		return (rand() %(max_temp_parameter - min_temp_parameter + 1)) + min_temp_parameter;  
+	}else{
+		if(flag_over_under == -1){
+			flag_over_under = ((rand()% 10) < 5);
+		}
+		if(flag_over_under == 1){		// generate value under the min treshold
+			return (rand() % min_temp_parameter);			
+		}else{					// generate value over the max treshold
+			return ( rand() % 15 )  + max_temp_parameter;
+		}
+	}
 }
 
 static void sense_callback(void *ptr){
-	printf("I'm sensing\n");	
-	light_value++;			//TODO change to generate fake values!
-    co2_value++;
-    temp_value++;
+	LOG_INFO("Sono qui!");	
+	light_value = fake_light_sensing();
+	printf("Light value: %d\n",light_value);		
+        co2_value = fake_co2_sensing();
+	printf("Co2 value: %d\n",co2_value);
+        temp_value = fake_temp_sensing();
+	printf("Temp value: %d\n",temp_value);
 
 	num_period++;
 	if(num_period == NUM_PERIOD_BEFORE_SEND){	
 		if (state == STATE_SUBSCRIBED3){	
-            pub_value("sensor/co2",co2_value);
-            pub_value("sensor/light",light_value);
-            pub_value("sensor/temp",temp_value);	
+		    pub_value("sensor/co2_light_temp",co2_value); // json invece che co2;	
 		}
-	}else if (light_value < min_light_parameter || light_value > max_light_parameter){
-        pub_value("sensor/light",light_value);
-    }else if (temp_value < min_temp_parameter || temp_value > max_temp_parameter){
-        pub_value("sensor/temp",temp_value);
-    }else if (co2_value < min_co2_parameter || co2_value > max_co2_parameter){
-        pub_value("sensor/co2",co2_value);
-    } 
-	if(num_period == NUM_PERIOD_BEFORE_SEND)
-		num_period = 0;		//reset
+		num_period = 0;		//	reset
+	}else{
+	 if (light_value < min_light_parameter || light_value > max_light_parameter || temp_value < min_temp_parameter || temp_value > max_temp_parameter || co2_value < min_co2_parameter)
+        	pub_value("sensor/co2_light_temp",light_value);
+	}
+
 	ctimer_reset(&sensing_timer);
 }
 
@@ -138,30 +191,30 @@ PROCESS(sensor_light_co2_temp, "MQTT sensor_light_co2_temp");
 AUTOSTART_PROCESSES(&sensor_light_co2_temp);
 
 static void pub_handler_light(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%hhd_%hhd", &min_light_parameter, &max_light_parameter);
-    printf("Pub Handler: topic=LIGHT, min=%hhd max=%hhd\n", min_light_parameter, max_light_parameter);
+    sscanf((char *)chunk, "%d_%d", &min_light_parameter, &max_light_parameter);
+    LOG_INFO("Pub Handler: topic=param/light, min=%d max=%d\n", min_light_parameter, max_light_parameter);
 }
 
 static void pub_handler_co2(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%hhd_%hhd", &min_co2_parameter, &max_co2_parameter);
-    printf("Pub Handler: topic=CO2, min=%hhd max=%hhd\n", min_co2_parameter, max_co2_parameter);
+    sscanf((char *)chunk, "%d_%d", &min_co2_parameter, &max_co2_parameter);
+    LOG_INFO("Pub Handler: topic=param/co2, min=%d max=%d\n", min_co2_parameter, max_co2_parameter);
 }
 
 static void pub_handler_temp(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%hhd_%hhd", &min_temp_parameter, &max_temp_parameter);
-    printf("Pub Handler: topic=TEMP, min=%hhd max=%hhd\n", min_temp_parameter, max_temp_parameter);
+    sscanf((char *)chunk, "%d_%d", &min_temp_parameter, &max_temp_parameter);
+    LOG_INFO("Pub Handler: topic=param/temp, min=%d max=%d\n", min_temp_parameter, max_temp_parameter);
 }
 
 static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data){
     switch(event) {
     case MQTT_EVENT_CONNECTED: {
-        printf("Application has a MQTT connection\n");
+        LOG_INFO("Application has a MQTT connection\n");
 
         state = STATE_CONNECTED;
         break;
     }
     case MQTT_EVENT_DISCONNECTED: {
-        printf("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
+        LOG_INFO("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
         state = STATE_DISCONNECTED;
         process_poll(&sensor_light_co2_temp);
@@ -184,27 +237,27 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data
             mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
 
             if(suback_event->success) {
-                printf("Application is subscribed to topic successfully\n");
+                LOG_INFO("Application is subscribed to topic successfully\n");
                 sub_num++;
             } else {
-                printf("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
+                LOG_ERR("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
             }
         #else
-            printf("Application is subscribed to topic successfully\n");
+            LOG_INFO("Application is subscribed to topic successfully\n");
             sub_num++;
         #endif
             break;
     }
     case MQTT_EVENT_UNSUBACK: {
-        printf("Application is unsubscribed to topic successfully\n");
+        LOG_INFO("Application is unsubscribed to topic successfully\n");
         break;
     }
     case MQTT_EVENT_PUBACK: {
-        printf("Publishing complete.\n");
+        LOG_INFO("Publishing complete.\n");
         break;
     }
     default:
-        printf("Application got a unhandled MQTT event: %i\n", event);
+        LOG_INFO("Application got a unhandled MQTT event: %i\n", event);
         break;
     }
 }
@@ -218,8 +271,12 @@ static bool have_connectivity(void){
 }
 
 PROCESS_THREAD(sensor_light_co2_temp, ev, data){
-    PROCESS_BEGIN();    
-    printf("MQTT sensor_light_co2_temp started\n");
+
+	
+	
+    PROCESS_BEGIN();
+   
+    LOG_INFO("MQTT sensor_light_co2_temp started\n");
 
     // Initialize the ClientID as MAC address
     snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x%02x%02x%02x",
@@ -249,7 +306,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
             
             if(state == STATE_NET_OK){
                 // Connect to MQTT broker
-                printf("Connecting to MQTT broker!\n");
+                LOG_INFO("Connecting to MQTT broker!\n");
                 
                 memcpy(broker_address, broker_ip, strlen(broker_ip));
                 
@@ -263,7 +320,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
                 // topic: light
                 strcpy(sub_topic,"param/light");
                 status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
-                printf("Subscribing to param/light topic!\n");
+                LOG_INFO("Subscribing to param/light topic!\n");
                 if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
                     LOG_ERR("Tried to subscribe to param/light topic but command queue was full!\n");
                     PROCESS_EXIT();
@@ -280,7 +337,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
                 //topic: co2
                 strcpy(sub_topic,"param/co2");
                 status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
-                printf("Subscribing to param/co2 topic!\n");
+                LOG_INFO("Subscribing to param/co2 topic!\n");
                 if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
                     LOG_ERR("Tried to subscribe to param/co2 but command queue was full!\n");
                     PROCESS_EXIT();
@@ -297,7 +354,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
                 // topic: temp
                 strcpy(sub_topic,"param/temp");
                 status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
-                printf("Subscribing to param/temp topic!\n");
+                LOG_INFO("Subscribing to param/temp topic!\n");
                 if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
                     LOG_ERR("Tried to subscribe to param/temp topic but command queue was full!\n");
                     PROCESS_EXIT();
@@ -324,7 +381,20 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
             }
             
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
-        }
+        }else if(ev == button_hal_press_event) {
+			button_pressed++;
+			if(button_pressed == 1){
+				temp_in_range = co2_in_range = 0;	// co2 e temp out of range			
+			}else if(button_pressed == 2){
+				light_in_range = 0;		// light out of range
+			}else if(button_pressed == 3){
+				button_pressed = 0;
+				light_in_range = temp_in_range = co2_in_range = 1; // normal value
+				flag_over_under = -1;			
+			}		
+			
+		
+	}
 
     }
 

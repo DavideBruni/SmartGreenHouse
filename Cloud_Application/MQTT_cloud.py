@@ -19,17 +19,10 @@ def on_connect_humidity(client, userdata, flags, rc):
 	print("Connected with result code " + str(rc))
 	client.subscribe("sensor/humidity")
 
-def on_connect_light(client, userdata, flags, rc):
+def on_connect_co2_light_temp(client, userdata, flags, rc):
 	print("Connected with result code " + str(rc))
-	client.subscribe("sensor/light")
+	client.subscribe("sensor/co2_light_temp")
 
-def on_connect_co2(client, userdata, flags, rc):
-	print("Connected with result code " + str(rc))
-	client.subscribe("sensor/co2")
-
-def on_connect_temp(client, userdata, flags, rc):
-	print("Connected with result code " + str(rc))
-	client.subscribe("sensor/temp")
 # ------------------------------------------------------------------------------------
 
 # The callback for when a PUBLISH message is received from the server.
@@ -46,9 +39,7 @@ def on_message(client, userdata, msg):
 
 on_connect_callbacks = { 
 	"humidity" : on_connect_humidity,
-	"light": on_connect_light,
-	"co2": on_connect_co2,
-	"temp": on_connect_temp
+	"co2_light_temp": on_connect_co2_light_temp
 }
 
 
@@ -64,15 +55,12 @@ def mqtt_client(topic):
 
 def main():
 	thread_humidity = Thread(target=mqtt_client, args=("humidity",))
-	thread_light = Thread(target=mqtt_client, args=("light",))
-	thread_co2 = Thread(target=mqtt_client, args=("co2",))
-	thread_temp = Thread(target=mqtt_client, args=("temp",))
+	thread_co2_light_temp = Thread(target=mqtt_client, args=("co2_light_temp",))
+	
 	
 	# starting threads
 	thread_humidity.start()
-	thread_light.start()
-	thread_co2.start()
-	thread_temp.start()	
+	thread_co2_light_temp.start()	
 
 if __name__ == '__main__':
 	main()
