@@ -93,34 +93,46 @@ static int is_first_pub_flag = 1;
 button_hal_button_t *btn;
 /*---------------------------------------------------------------------------*/
 /* SENSING SIMULATION */
-static void sense_callback(void *ptr){
-	printf("I'm sensing - value %d", value);	
-	value++;			//TODO change to generate fake values!
+static int fake_humidity_sensing(int value){
+    if(!alarm_state && value < min_humidity_parameter){     //caso in cui il bottone è stato appene premuto
+        alarm_state = true;
+        return value;
+    }
+    else if(alarm_state)
+        return ++value;
+    else
+        return (rand() %(max_humidity_parameter - min_humidity_parameter)) + min_humidity_parameter;
+
+}
+
+static void sense_callback(void *ptr){	
+	value = fake_humidity_sensing(value);
+	printf("I'm sensing - value %d", value);
 
     if(value < min_humidity_parameter)
         alarm_state = true;
-    else if(value > max_humidity_parameter)
+    else if(value >= max_humidity_parameter)
         alarm_state = false;
 
-    if(alarm_state){
+    if(alarm_state)
 	    printf("\t ALERT STATE\n");
+    else
+        printf("\n");
+
+    if(num_period >= NUM_PERIOD_BEFORE_SEND){
+        sprintf(pub_topic, "%s", "sensor/humidity");	
+        sprintf(app_buffer, "{ \"humidity_value\": %d }", value);
+        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+        num_period = 0;
+    }
+    else if(alarm_state){
+        sprintf(pub_topic, "%s", "sensor/humidity");	
+        sprintf(app_buffer, "{ \"humidity_value\": %d }", value);
+        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
     }
     else{
-	    num_period++;
-        printf("\n");
+        num_period++;
     }
-
-
-	if(num_period == NUM_PERIOD_BEFORE_SEND || alarm_state){	
-		if (state == STATE_SUBSCRIBED){	
-			sprintf(pub_topic, "%s", "sensor/humidity");	
-			sprintf(app_buffer, "%d", value); // copia il valore
-			mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
-			
-		}
-	}
-	if(num_period >= NUM_PERIOD_BEFORE_SEND)
-		num_period = 0;		//reset
     
     if(alarm_state)
         ctimer_set(&sensing_timer, SENSE_PERIOD_ON_ALERT * CLOCK_SECOND, sense_callback, NULL);

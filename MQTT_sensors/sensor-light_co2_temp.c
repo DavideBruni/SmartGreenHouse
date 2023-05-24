@@ -113,17 +113,6 @@ static int is_first_pub_flag = 1;
 
 /*---------------------------------------------------------------------------*/
 
-static void pub_value(const char * topic, int value){
-	printf("---------- Sono qui ------------");
-	memset(pub_topic, 0, strlen(pub_topic));
-	memset(app_buffer, 0, strlen(app_buffer));
-	sprintf(pub_topic, "%s", topic);	
-	sprintf(app_buffer, "%d", value); // copia il valore
-	printf("\nPub: %d on %s \n",value,topic);
-    	mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
-	
-}
-
 static int fake_light_sensing(){
 	if (light_in_range){
 		return (rand() %(max_light_parameter - min_light_parameter + 1)) + min_light_parameter;  
@@ -164,44 +153,54 @@ static int fake_temp_sensing(){
 }
 
 static void sense_callback(void *ptr){
-	LOG_INFO("Sono qui!");	
-	light_value = fake_light_sensing();
-	printf("Light value: %d\n",light_value);		
-        co2_value = fake_co2_sensing();
-	printf("Co2 value: %d\n",co2_value);
-        temp_value = fake_temp_sensing();
-	printf("Temp value: %d\n",temp_value);
+    if (state != STATE_SUBSCRIBED3)
+        return;
 
-	num_period++;
-	if(num_period == NUM_PERIOD_BEFORE_SEND){	
-		if (state == STATE_SUBSCRIBED3){	
-		    pub_value("sensor/co2_light_temp",co2_value); // json invece che co2;	
-		}
-		num_period = 0;		//	reset
-	}else{
-	 if (light_value < min_light_parameter || light_value > max_light_parameter || temp_value < min_temp_parameter || temp_value > max_temp_parameter || co2_value < min_co2_parameter)
-        	pub_value("sensor/co2_light_temp",light_value);
+	LOG_INFO("Sono qui!");		
+    
+    co2_value = fake_co2_sensing();
+	printf("Co2 value: %d\n", co2_value);
+
+	light_value = fake_light_sensing();
+	printf("Light value: %d\n", light_value);
+    
+    temp_value = fake_temp_sensing();
+	printf("Temp value: %d\n", temp_value);
+
+	if(num_period >= NUM_PERIOD_BEFORE_SEND){
+        sprintf(pub_topic, "%s", "sensor/co2_light_temp");	
+        sprintf(app_buffer, "{ \"co2_value\": %d, \"light_value\": %d, \"temp_value\": %d }", co2_value, light_value, temp_value);
+        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+		num_period = 0;
+	}else if(light_value < min_light_parameter || light_value > max_light_parameter || 
+             temp_value < min_temp_parameter || temp_value > max_temp_parameter || co2_value < min_co2_parameter){
+        sprintf(pub_topic, "%s", "sensor/co2_light_temp");	
+        sprintf(app_buffer, "{ \"co2_value\": %d, \"light_value\": %d, \"temp_value\": %d }", co2_value, light_value, temp_value);
+        mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 	}
+    else{
+        num_period++;
+    }
 
 	ctimer_reset(&sensing_timer);
 }
 
 
-PROCESS(sensor_light_co2_temp, "MQTT sensor_light_co2_temp");
-AUTOSTART_PROCESSES(&sensor_light_co2_temp);
-
-static void pub_handler_light(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%d_%d", &min_light_parameter, &max_light_parameter);
-    LOG_INFO("Pub Handler: topic=param/light, min=%d max=%d\n", min_light_parameter, max_light_parameter);
-}
+PROCESS(sensor_co2_light_temp, "MQTT sensor_co2_light_temp");
+AUTOSTART_PROCESSES(&sensor_co2_light_temp);
 
 static void pub_handler_co2(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%d_%d", &min_co2_parameter, &max_co2_parameter);
+    sscanf((char *)chunk, "{ \"min_co2_parameter\": %d, \"max_co2_parameter\": %d }", &min_co2_parameter, &max_co2_parameter);
     LOG_INFO("Pub Handler: topic=param/co2, min=%d max=%d\n", min_co2_parameter, max_co2_parameter);
 }
 
+static void pub_handler_light(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
+    sscanf((char *)chunk, "{ \"min_light_parameter\": %d, \"max_light_parameter\": %d }", &min_light_parameter, &max_light_parameter);
+    LOG_INFO("Pub Handler: topic=param/light, min=%d max=%d\n", min_light_parameter, max_light_parameter);
+}
+
 static void pub_handler_temp(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%d_%d", &min_temp_parameter, &max_temp_parameter);
+    sscanf((char *)chunk, "{ \"min_temp_parameter\": %d, \"max_temp_parameter\": %d }", &min_temp_parameter, &max_temp_parameter);
     LOG_INFO("Pub Handler: topic=param/temp, min=%d max=%d\n", min_temp_parameter, max_temp_parameter);
 }
 
@@ -217,7 +216,7 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data
         LOG_INFO("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
         state = STATE_DISCONNECTED;
-        process_poll(&sensor_light_co2_temp);
+        process_poll(&sensor_co2_light_temp);
         break;
     }
     case MQTT_EVENT_PUBLISH: {      //triggered when a new msg is published
@@ -270,13 +269,13 @@ static bool have_connectivity(void){
     return true;
 }
 
-PROCESS_THREAD(sensor_light_co2_temp, ev, data){
+PROCESS_THREAD(sensor_co2_light_temp, ev, data){
 
 	
 	
     PROCESS_BEGIN();
    
-    LOG_INFO("MQTT sensor_light_co2_temp started\n");
+    LOG_INFO("MQTT sensor_co2_light_temp started\n");
 
     // Initialize the ClientID as MAC address
     snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x%02x%02x%02x",
@@ -285,7 +284,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
                         linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
 
     // Broker registration					 
-    mqtt_register(&conn, &sensor_light_co2_temp, client_id, mqtt_event, MAX_TCP_SEGMENT_SIZE);
+    mqtt_register(&conn, &sensor_co2_light_temp, client_id, mqtt_event, MAX_TCP_SEGMENT_SIZE);
          
     state=STATE_INIT;
                         
@@ -381,6 +380,7 @@ PROCESS_THREAD(sensor_light_co2_temp, ev, data){
             }
             
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
+
         }else if(ev == button_hal_press_event) {
 			button_pressed++;
 			if(button_pressed == 1){
