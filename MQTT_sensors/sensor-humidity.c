@@ -1,4 +1,5 @@
 #include "contiki.h"
+#include "os/dev/button-hal.h"
 #include "net/routing/routing.h"
 #include "mqtt.h"
 #include "net/ipv6/uip.h"
@@ -12,6 +13,7 @@
 #include "os/sys/log.h"
 #include "mqtt-client.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 
@@ -77,22 +79,39 @@ static struct ctimer sensing_timer;
 static mqtt_status_t status;
 static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
-static int value = 0;
-static uint8_t min_humidity_parameter = 5;		//TODO is it float?
-static uint8_t max_humidity_parameter = 15;		//TODO is it float?
+static int value = 15;
+static uint8_t min_humidity_parameter = 10;
+static uint8_t max_humidity_parameter = 30;
+static bool alarm_state = false;
 
-#define SENSE_PERIOD 		5		// seconds
+#define SENSE_PERIOD 		4		// seconds
+#define SENSE_PERIOD_ON_ALERT 	2		// seconds
 #define NUM_PERIOD_BEFORE_SEND  6 		// every 30 second there's one pub
 
 static int num_period = 0;
 static int is_first_pub_flag = 1;
+button_hal_button_t *btn;
 /*---------------------------------------------------------------------------*/
 /* SENSING SIMULATION */
 static void sense_callback(void *ptr){
-	printf("I'm sensing\n");	
+	printf("I'm sensing - value %d", value);	
 	value++;			//TODO change to generate fake values!
-	num_period++;
-	if(num_period == NUM_PERIOD_BEFORE_SEND || value < min_humidity_parameter || value > max_humidity_parameter){	
+
+    if(value < min_humidity_parameter)
+        alarm_state = true;
+    else if(value > max_humidity_parameter)
+        alarm_state = false;
+
+    if(alarm_state){
+	    printf("\t ALERT STATE\n");
+    }
+    else{
+	    num_period++;
+        printf("\n");
+    }
+
+
+	if(num_period == NUM_PERIOD_BEFORE_SEND || alarm_state){	
 		if (state == STATE_SUBSCRIBED){	
 			sprintf(pub_topic, "%s", "sensor/humidity");	
 			sprintf(app_buffer, "%d", value); // copia il valore
@@ -100,9 +119,13 @@ static void sense_callback(void *ptr){
 			
 		}
 	}
-	if(num_period == NUM_PERIOD_BEFORE_SEND)
+	if(num_period >= NUM_PERIOD_BEFORE_SEND)
 		num_period = 0;		//reset
-	ctimer_reset(&sensing_timer);
+    
+    if(alarm_state)
+        ctimer_set(&sensing_timer, SENSE_PERIOD_ON_ALERT * CLOCK_SECOND, sense_callback, NULL);
+    else
+        ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);
 }
 
 
@@ -186,9 +209,11 @@ PROCESS_THREAD(sensor_humidity, ev, data){
 
     // Broker registration					 
     mqtt_register(&conn, &sensor_humidity, client_id, mqtt_event, MAX_TCP_SEGMENT_SIZE);
-         
     state=STATE_INIT;
                         
+    //button initialization
+    btn = button_hal_get_by_index(0);
+
     // Initialize periodic timer to check the status 
     etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
 
@@ -234,10 +259,11 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             }
                 
             if(state == STATE_SUBSCRIBED){
-		if(is_first_pub_flag == 1){
-			ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);	
-			is_first_pub_flag = 0;	
-		}
+                if(is_first_pub_flag == 1){
+                    //publish on topic=sensor/humidity
+                    ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);	
+                    is_first_pub_flag = 0;	
+                }
                 // Publish something
                // sprintf(pub_topic, "%s", "sensor/humidity");
                 
@@ -256,6 +282,10 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             }
             
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
+        }
+        else if(ev == button_hal_press_event){
+            value = min_humidity_parameter - 3;
+            //sense_callback(NULL);
         }
 
     }
