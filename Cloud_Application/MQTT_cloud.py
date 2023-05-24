@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 from threading import Thread
 import mysql.connector
+import json
 
 mydb = mysql.connector.connect(
   host="localhost",
@@ -13,7 +14,6 @@ mycursor = mydb.cursor()
 
 sql = "INSERT INTO dataSensed (value, type) VALUES (%s, %s)"
 # ------------------------------------------------------------------------------------
-
 # The callbacks for when the client receives a CONNACK response from the server.
 def on_connect_humidity(client, userdata, flags, rc):
 	print("Connected with result code " + str(rc))
@@ -27,14 +27,16 @@ def on_connect_co2_light_temp(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-	print(msg.topic+" "+str(msg.payload))
-
+	print(msg.topic+" "+str(msg.payload.decode("utf-8","ignore")))
+	json_payload = json.loads(str(msg.payload.decode("utf-8","ignore")))
+	
 	sensed_type = msg.topic[7:]		#remove sensor/
 
-	val = (float(msg.payload), sensed_type)
-	mycursor.execute(sql, val)
+	for key in json_payload:
+		val = (int(json_payload[key]), sensed_type)
+		mycursor.execute(sql, val)
 
-	mydb.commit()
+		mydb.commit()
 
 
 on_connect_callbacks = { 
