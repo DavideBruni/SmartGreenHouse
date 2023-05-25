@@ -21,6 +21,7 @@ public class CLIThread extends Thread{
 
     private static final String broker = "tcp://127.0.0.1:1883";
     private static final String clientId = "RemoteControlApp";
+    private static Map<String, Boolean> is_changed = new HashMap<>();
 
     @Override
     public void run() {
@@ -78,8 +79,20 @@ public class CLIThread extends Thread{
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
-                        break;
                     }
+			try {
+			    MqttClient client = new MqttClient(broker, clientId);
+			    client.connect();
+			    String content;
+			    for (String topic : is_changed.keySet()) {
+				send_mqtt(client, "param/" + topic);
+			    }
+				
+			    client.disconnect();
+			    
+			} catch (MqttException e) {
+			    e.printStackTrace();
+			}
                     break;
                 default:
                     System.out.println("Invalid command");
@@ -131,8 +144,6 @@ public class CLIThread extends Thread{
 
     private void setParameters(String command, String value) {
 
-        Map<String, Boolean> is_changed = new HashMap<>();
-
         switch (command) {
             case "\\min_light_parameter":
                 LightSensor.getInstance().setMin(Integer.parseInt(value));
@@ -170,20 +181,6 @@ public class CLIThread extends Thread{
                 System.out.println("Invalid command");
         }
 
-
-        try {
-            MqttClient client = new MqttClient(broker, clientId);
-            client.connect();
-            String content;
-            for (String topic : is_changed.keySet()) {
-                send_mqtt(client, "param/" + topic);
-            }
-
-            client.disconnect();
-
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -192,19 +189,19 @@ public class CLIThread extends Thread{
         JSONObject jsonObject = new JSONObject();
         switch(topic) {
             case "param/humidity":
-                jsonObject.put("min_humidity_param",HumiditySensor.getInstance().getMin());
-                jsonObject.put("max_humidity_param",HumiditySensor.getInstance().getMax());
+                jsonObject.put("min_humidity_parameter",HumiditySensor.getInstance().getMin());
+                jsonObject.put("max_humidity_parameter",HumiditySensor.getInstance().getMax());
                 break;
             case "param/co2":
-                jsonObject.put("min_co2_param",Co2Sensor.getInstance().getMin());
+                jsonObject.put("min_co2_parameter",Co2Sensor.getInstance().getMin());
                 break;
             case "param/temp":
-                jsonObject.put("min_temp_param",TempSensor.getInstance().getMin());
-                jsonObject.put("max_temp_param",TempSensor.getInstance().getMax());
+                jsonObject.put("min_temp_parameter",TempSensor.getInstance().getMin());
+                jsonObject.put("max_temp_parameter",TempSensor.getInstance().getMax());
                 break;
             case "param/light":
-                jsonObject.put("min_light_param",LightSensor.getInstance().getMin());
-                jsonObject.put("max_light_param",LightSensor.getInstance().getMax());
+                jsonObject.put("min_light_parameter",LightSensor.getInstance().getMin());
+                jsonObject.put("max_light_parameter",LightSensor.getInstance().getMax());
                 break;
             default:
                 System.err.println("Internal error: invalid topic");
