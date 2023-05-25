@@ -1,12 +1,13 @@
 package greenHouse.unipi.it.model;
 
-public class TempSensor {
-    private static TempSensor INSTANCE;
-    private int min;
-    private int max;
-    private int value;
+import greenHouse.unipi.it.DAO.ResourceDAO;
+import greenHouse.unipi.it.threads.CoapClientThread;
 
+public class TempSensor extends Sensor{
+    private static TempSensor INSTANCE;
+    private Boolean last_time_light;
     private TempSensor() {
+        last_time_light = Boolean.FALSE;
     }
 
     public static TempSensor getInstance() {
@@ -17,27 +18,30 @@ public class TempSensor {
         return INSTANCE;
     }
 
-    public void setMin(int min) {
-        this.min = min;
+    public void setActionMin(){
+        if(Co2Sensor.getInstance().getValue()<Co2Sensor.getInstance().getMin()){        // I cannot close the window, co2 constraints
+            if(!LightSensor.getInstance().getIsNight()) {
+                last_time_light = Boolean.TRUE;
+                ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
+                new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "up").start();
+            }
+        }else{
+            //if last time I increase the brightness, I put them down again in order to re-establish the origin situation
+            last_time_light = Boolean.FALSE;
+            ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("window");
+            new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "close").start();
+        }
+
+    }
+    public void setActionMax(){
+        if(last_time_light = Boolean.TRUE){
+            last_time_light = Boolean.FALSE;        // if the temperature remains HIGH, then I need to open the window
+            ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
+            new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "down").start();
+        }else {
+            ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("window");
+            new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "open").start();
+        }
     }
 
-    public void setMax(int max) {
-        this.max = max;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public int getMin() {
-        return min;
-    }
-
-    public int getMax() {
-        return max;
-    }
 }

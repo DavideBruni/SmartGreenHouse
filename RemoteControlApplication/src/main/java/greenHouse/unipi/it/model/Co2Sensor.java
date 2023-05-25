@@ -1,9 +1,11 @@
 package greenHouse.unipi.it.model;
 
-public class Co2Sensor {
+import greenHouse.unipi.it.DAO.ResourceDAO;
+import greenHouse.unipi.it.threads.CoapClientThread;
+
+public class Co2Sensor extends Sensor{
     private static Co2Sensor INSTANCE;
-    private int min;
-    private int value;
+
 
     private Co2Sensor() {
     }
@@ -16,20 +18,10 @@ public class Co2Sensor {
         return INSTANCE;
     }
 
-    public void setMin(int min) {
-        this.min = min;
+    public void setActionMin(){
+        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("window");
+        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "open").start();
     }
+    public void setActionMax(){}
 
-
-    public void setValue(int value) {
-        this.value = value;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public int getMin() {
-        return min;
-    }
 }

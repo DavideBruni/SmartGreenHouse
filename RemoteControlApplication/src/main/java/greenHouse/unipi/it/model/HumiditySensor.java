@@ -1,10 +1,10 @@
 package greenHouse.unipi.it.model;
 
-public class HumiditySensor {
+import greenHouse.unipi.it.DAO.ResourceDAO;
+import greenHouse.unipi.it.threads.CoapClientThread;
+
+public class HumiditySensor extends Sensor{
     private static HumiditySensor INSTANCE;
-    private int min;
-    private int max;
-    private int value;
 
     private HumiditySensor() {
     }
@@ -16,28 +16,12 @@ public class HumiditySensor {
 
         return INSTANCE;
     }
-
-    public void setMin(int min) {
-        this.min = min;
+    public void setActionMin(){
+        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
+        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "on").start();
     }
-
-    public void setMax(int max) {
-        this.max = max;
-    }
-
-    public void setValue(int value) {
-        this.value = value;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public int getMin() {
-        return min;
-    }
-
-    public int getMax() {
-        return max;
+    public void setActionMax(){
+        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
+        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "off").start();
     }
 }

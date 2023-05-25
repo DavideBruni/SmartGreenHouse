@@ -1,11 +1,11 @@
 package greenHouse.unipi.it.model;
 
-public class LightSensor {
-    private static LightSensor INSTANCE;
-    private int min;
-    private int max;
-    private int value;
+import greenHouse.unipi.it.DAO.ResourceDAO;
+import greenHouse.unipi.it.threads.CoapClientThread;
 
+public class LightSensor extends Sensor{
+    private static LightSensor INSTANCE;
+    private static boolean is_night = false;
     private LightSensor() {
     }
 
@@ -17,31 +17,20 @@ public class LightSensor {
         return INSTANCE;
     }
 
-    public void setMin(int min) {
-        this.min = min;
+    public void setActionMin(){
+        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
+        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "up").start();
+    }
+    public void setActionMax(){
+        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
+        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "down").start();
     }
 
-    public void setMax(int max) {
-        this.max = max;
+    public void setNight(boolean b) {
+        is_night=b;
     }
 
-    public void setValue(int value) {
-        this.value = value;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    /*public setLightHours(){
-
-    }*/
-
-    public int getMin() {
-        return min;
-    }
-
-    public int getMax() {
-        return max;
+    public boolean getIsNight() {
+        return is_night;
     }
 }
