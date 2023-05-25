@@ -23,11 +23,18 @@ RESOURCE(res_sprinkler,
          NULL);
 
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
-    size_t len = 0;
-    const char *action = NULL;
-
-    printf("Sono qui!");
-    if((len = coap_get_post_variable(request, "action", &action))) {
+    int len = 0;
+    char action[50];
+    const uint8_t *chunk;
+	
+    
+    len = coap_get_payload(request,&chunk);
+	printf("Chunk: %s\n",(char *)chunk);
+	
+    if(len>0){
+	sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
+	}
+     if(action!=NULL && strlen(action)!=0){
         if((strncmp(action, "on", len) == 0) && sprinkler_status == 0){
             leds_set(LEDS_GREEN);
             sprinkler_status = 1;
