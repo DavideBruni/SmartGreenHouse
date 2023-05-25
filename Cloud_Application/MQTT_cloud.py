@@ -30,10 +30,8 @@ def on_message(client, userdata, msg):
 	print(msg.topic+" "+str(msg.payload.decode("utf-8","ignore")))
 	json_payload = json.loads(str(msg.payload.decode("utf-8","ignore")))
 	
-	sensed_type = msg.topic[7:]		#remove sensor/
-
 	for key in json_payload:
-		val = (int(json_payload[key]), sensed_type)
+		val = (int(json_payload[key]), key[:-6])		# remove _value (ex: co2_value)
 		mycursor.execute(sql, val)
 
 		mydb.commit()

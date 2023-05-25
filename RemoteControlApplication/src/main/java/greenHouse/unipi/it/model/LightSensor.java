@@ -7,6 +7,8 @@ public class LightSensor extends Sensor{
     private static LightSensor INSTANCE;
     private static boolean is_night = false;
     private LightSensor() {
+	min = 32000;
+	max = 100000;
     }
 
     public static LightSensor getInstance() {

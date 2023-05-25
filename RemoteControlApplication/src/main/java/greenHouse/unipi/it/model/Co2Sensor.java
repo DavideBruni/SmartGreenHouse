@@ -8,6 +8,8 @@ public class Co2Sensor extends Sensor{
 
 
     private Co2Sensor() {
+	min = 300;
+	max = 400;
     }
 
     public static Co2Sensor getInstance() {

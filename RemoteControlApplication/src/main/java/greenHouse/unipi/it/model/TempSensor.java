@@ -8,6 +8,8 @@ public class TempSensor extends Sensor{
     private Boolean last_time_light;
     private TempSensor() {
         last_time_light = Boolean.FALSE;
+	min = 15;
+	max = 20;
     }
 
     public static TempSensor getInstance() {

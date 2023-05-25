@@ -1,9 +1,9 @@
 package greenHouse.unipi.it.model;
 
 public abstract class Sensor {
-    private int min;
-    private int max;
-    private int value;
+    protected int min;
+    protected int max;
+    protected int value;
 
 
     public void setMin(int min) {

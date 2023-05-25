@@ -29,50 +29,59 @@ public class PollingDBThread extends Thread{
 
     @Override
     public void run() {
-        try {
-            sleep(10*1000);     //30 seconds
-            // read from DB
-            try (Connection connection = DriverManager.getConnection(url, username, password)) {
-                java.util.Date date = new java.util.Date();
-                lastTimestamp = new java.sql.Timestamp(date.getTime());     // next time, I'll check if there will be command after this timestamp
-                for (String str : types.keySet()) {
-                    PreparedStatement ps = connection.prepareStatement(
-                            "SELECT value FROM dataSensed WHERE timestamp > ? AND type = ? ORDER BY timestamp DESC LIMIT 1;");
-                    ps.setTimestamp(1, lastTimestamp);
-                    ps.setString(2, str);
-                    ResultSet res = ps.executeQuery();
-                    while (res.next()) {
-                        int value = res.getInt("value");
-                        values.put(str, value);
-                        types.get(str).setValue(value);
-                    }
-                }
-            } catch (SQLException e) {
-                System.err.println("Cannot connect the database!");
-            }
-            // check values
-            if(!values.isEmpty()){                      // ResultSet was not empty
-                for(String type : types.keySet()){      // for each kind of sensor
-                    if(values.containsKey(type)){       // check if there's a new value for each type
-                        int value = values.get(type);
-                        String action = null;
-                        if(type.equals("light")){
-                            if(LightSensor.getInstance().getIsNight())
-                                continue;
-                        }
-                        if(value < types.get(type).getMin()){
-                            types.get(type).setActionMin();
-                        }else if(value > types.get(type).getMin()){
-                            types.get(type).setActionMax();
-                        }
+	
+	while(true){        
+		try {
+		    sleep(10*1000);     //30 seconds
+		    // read from DB
+		    try (Connection connection = DriverManager.getConnection(url, username, password)) {
+			
+		        java.util.Date date = new java.util.Date();
+		        Timestamp tempTimestamp = new java.sql.Timestamp(date.getTime());     // next time, I'll check if there will be command after this timestamp
+		        for (String str : types.keySet()) {
+				System.out.println(lastTimestamp);
+		            PreparedStatement ps = connection.prepareStatement(
+		                    "SELECT value FROM dataSensed WHERE timestamp > ? AND type = ? ORDER BY timestamp DESC LIMIT 1;");
+		            ps.setTimestamp(1, lastTimestamp);
+		            ps.setString(2, str);
+		            ResultSet res = ps.executeQuery();
+		            while (res.next()) {
+		                int value = res.getInt("value");
+				System.out.println(value);
+		                values.put(str, value);
+		                types.get(str).setValue(value);
+		            }
+		        }
+			lastTimestamp = tempTimestamp;
+		    } catch (SQLException e) {
+		        System.err.println("Cannot connect the database!");
+		    }
+		    // check values
+		    if(!values.isEmpty()){                      // ResultSet was not empty
+		        for(String type : types.keySet()){      // for each kind of sensor
+		            if(values.containsKey(type)){       // check if there's a new value for each type
+		                int value = values.get(type);
+		                String action = null;
+		                if(type.equals("light")){
+		                    if(LightSensor.getInstance().getIsNight())
+		                        continue;
+		                }
+		                if(value < types.get(type).getMin()){
+					System.out.println("Sotto al minimo");
+		                    types.get(type).setActionMin();
+		                }else if(value >= types.get(type).getMax()){
+					System.out.println("Sopra al massimo");
+		                    types.get(type).setActionMax();
+		                }
 
 
-                    }
-                }
-            }
+		            }
+		        }
+		    }
 
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+		} catch (InterruptedException e) {
+		    throw new RuntimeException(e);
+		}
+	}
     }
 }
