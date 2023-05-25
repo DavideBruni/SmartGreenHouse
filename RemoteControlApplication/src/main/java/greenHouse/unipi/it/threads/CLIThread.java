@@ -1,6 +1,5 @@
 package greenHouse.unipi.it.threads;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import greenHouse.unipi.it.DAO.ResourceDAO;
 import greenHouse.unipi.it.model.Co2Sensor;
 import greenHouse.unipi.it.model.HumiditySensor;
@@ -8,8 +7,6 @@ import greenHouse.unipi.it.model.LightSensor;
 import greenHouse.unipi.it.model.TempSensor;
 import org.eclipse.paho.client.mqttv3.*;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +28,7 @@ public class CLIThread extends Thread{
         while(true) {
             System.out.println("----- Main menu -----");
             System.out.println("Type \"\\help\" to show all the available commands");
-            String command = null;
+            String command;
             // Reading data using readLine
             try {
                 command = reader.readLine();

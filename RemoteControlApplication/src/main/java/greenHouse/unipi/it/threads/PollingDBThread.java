@@ -39,7 +39,7 @@ public class PollingDBThread extends Thread{
 		        java.util.Date date = new java.util.Date();
 		        Timestamp tempTimestamp = new java.sql.Timestamp(date.getTime());     // next time, I'll check if there will be command after this timestamp
 		        for (String str : types.keySet()) {
-				System.out.println(lastTimestamp);
+
 		            PreparedStatement ps = connection.prepareStatement(
 		                    "SELECT value FROM dataSensed WHERE timestamp > ? AND type = ? ORDER BY timestamp DESC LIMIT 1;");
 		            ps.setTimestamp(1, lastTimestamp);
@@ -47,7 +47,7 @@ public class PollingDBThread extends Thread{
 		            ResultSet res = ps.executeQuery();
 		            while (res.next()) {
 		                int value = res.getInt("value");
-				System.out.println(value);
+
 		                values.put(str, value);
 		                types.get(str).setValue(value);
 		            }
@@ -67,10 +67,10 @@ public class PollingDBThread extends Thread{
 		                        continue;
 		                }
 		                if(value < types.get(type).getMin()){
-					System.out.println("Sotto al minimo");
+
 		                    types.get(type).setActionMin();
 		                }else if(value >= types.get(type).getMax()){
-					System.out.println("Sopra al massimo");
+
 		                    types.get(type).setActionMax();
 		                }
 
