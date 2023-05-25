@@ -1,6 +1,7 @@
 #include "contiki.h"
 #include "coap-engine.h"
 #include "os/dev/leds.h"
+#include "json_util.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -24,7 +25,7 @@ RESOURCE(res_window,
 
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
     int len = 0;
-    char action[50];
+    char* action = NULL;
     const uint8_t *chunk;
 	
     
@@ -32,24 +33,26 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
 	printf("Chunk: %s\n",(char *)chunk);
 	
     if(len>0){
-	sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
-	}
-
-	printf("Ho ricevuto: %s\n",action);     
+	    //sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
+        action = findJsonField_String((char *)chunk, "action");
+        printf("ACTION: %s\n", action);        //stampa tipo: Chunk: {"action":"up"}
+	}  
     
-     if(action!=NULL && strlen(action)!=0){
+    if(action!=NULL && strlen(action)!=0){
         if((strncmp(action, "open", len) == 0) && window_status==0){
             leds_set(LEDS_GREEN);
-	    window_status = 1;
-	}
+	        window_status = 1;
+	    }
         else if((strncmp(action, "close", len) == 0) && window_status==1){
             leds_set(LEDS_RED);
-	    window_status = 0;
-	}
+	        window_status = 0;
+	    }
         else
             coap_set_status_code(response, BAD_OPTION_4_02);
-    }else{
-
-	coap_set_status_code(response, BAD_REQUEST_4_00);
     }
+    else{
+	    coap_set_status_code(response, BAD_REQUEST_4_00);
+    }
+
+    free(action);
 }

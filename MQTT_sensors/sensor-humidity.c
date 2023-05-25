@@ -12,6 +12,7 @@
 #include "dev/leds.h"
 #include "os/sys/log.h"
 #include "mqtt-client.h"
+#include "json_util.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -102,7 +103,6 @@ static int fake_humidity_sensing(int value){
         return ++value;
     else
         return (rand() %(max_humidity_parameter - min_humidity_parameter)) + min_humidity_parameter;
-
 }
 
 static void sense_callback(void *ptr){	
@@ -146,7 +146,9 @@ PROCESS(sensor_humidity, "MQTT sensor_humidity");
 AUTOSTART_PROCESSES(&sensor_humidity);
 
 static void pub_handler_humidity(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    sscanf((char *)chunk, "%hhd_%hhd", &min_humidity_parameter, &max_humidity_parameter);
+    //sscanf((char *)chunk, "%hhd_%hhd", &min_humidity_parameter, &max_humidity_parameter);
+    min_humidity_parameter = (uint8_t)findJsonField_Number((char *)chunk, "min_humidity_parameter");
+    max_humidity_parameter = (uint8_t)findJsonField_Number((char *)chunk, "max_humidity_parameter");
     printf("Pub Handler: topic=HUMIDITY, min=%hhd max=%hhd\n", min_humidity_parameter, max_humidity_parameter);
 }
 

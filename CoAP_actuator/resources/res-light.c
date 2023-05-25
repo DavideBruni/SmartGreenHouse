@@ -1,6 +1,7 @@
 #include "contiki.h"
 #include "coap-engine.h"
 #include "os/dev/leds.h"
+#include "json_util.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -24,17 +25,19 @@ RESOURCE(res_light,
 
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset){
     int len = 0;
-    char action[50];
+    char* action = NULL;
     const uint8_t *chunk;
-	
     
     len = coap_get_payload(request,&chunk);
 	printf("Chunk: %s\n",(char *)chunk);
 	
     if(len>0){
-	sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
+	    //sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}", action);
+        action = findJsonField_String((char *)chunk, "action");
+        printf("ACTION: %s\n", action);        //stampa tipo: Chunk: {"action":"up"}
 	}
-     if(action!=NULL && strlen(action)!=0){
+
+    if(action!=NULL && strlen(action)!=0){
         if((strncmp(action, "up", len) == 0)){
             if(light_status == 0){
                 leds_set(LEDS_YELLOW);
@@ -45,7 +48,8 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
             }else{
                 printf("Light has max brightness"); // send respponse back ?
             }
-	    }else if((strncmp(action, "down", len) == 0)){
+	    }
+        else if((strncmp(action, "down", len) == 0)){
             if(light_status == 2){
                 leds_set(LEDS_YELLOW);
                 light_status--;
@@ -55,12 +59,17 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
             }else{
                 printf("Light is turned off "); // send respponse back ?
             }
-	    }else if((strncmp(action, "off", len) == 0)){
+	    }
+        else if((strncmp(action, "off", len) == 0)){
             light_status = 0;
             leds_off(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_RED) | LEDS_NUM_TO_MASK(LEDS_YELLOW)); 
-	    }else
+	    }
+        else
             coap_set_status_code(response, BAD_OPTION_4_02);
-    }else{
+    }
+    else{
         coap_set_status_code(response, BAD_REQUEST_4_00);
     }
+
+    free(action);
 }
