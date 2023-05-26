@@ -120,4 +120,13 @@ public class ResourceDAO {
     public String getStatus() {
         return status;
     }
+
+    @Override
+    public String toString() {
+        return "Actuator status{\n" +
+                "\tip = [" + ip + ']' +
+                ",\n\tresource = '" + resource + '\'' +
+                ",\n\tstatus = '" + status + '\'' +
+                "\n}";
+    }
 }

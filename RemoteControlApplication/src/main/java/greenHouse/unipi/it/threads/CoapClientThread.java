@@ -43,6 +43,5 @@ public class CoapClientThread extends Thread{
                 resourceDAO.changeStatus("Error");
                 break;
         }
-        //code.equals(CoAP.ResponseCode.CREATED);
     }
 }

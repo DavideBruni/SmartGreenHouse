@@ -28,6 +28,7 @@ public class CLIThread extends Thread{
         while(true) {
             System.out.println("----- Main menu -----");
             System.out.println("Type \"\\help\" to show all the available commands");
+            print_help();
             String command;
             // Reading data using readLine
             try {
@@ -37,6 +38,7 @@ public class CLIThread extends Thread{
             }
             switch(command){
                 case "\\help":
+                    print_help();
                     break;
                 case "\\action":
                     System.out.println("What do you want to do?");
@@ -106,6 +108,15 @@ public class CLIThread extends Thread{
                     } catch (MqttException e) {
                         e.printStackTrace();
                     }
+                    break;
+                case "\\show_actuators_status":
+                    ResourceDAO light_act = ResourceDAO.retrieveInformation("light");
+                    ResourceDAO window_act = ResourceDAO.retrieveInformation("window");
+                    ResourceDAO sprinkler_act = ResourceDAO.retrieveInformation("sprinkler");
+
+                    System.out.println(light_act);
+                    System.out.println(window_act);
+                    System.out.println(sprinkler_act);
                     break;
                 default:
                     System.out.println("Invalid command");
@@ -230,5 +241,15 @@ public class CLIThread extends Thread{
         MqttMessage message = new MqttMessage(jsonObject.toJSONString().getBytes());
         client.publish(topic, message);
 
+    }
+
+
+    private void print_help(){
+
+        System.out.println("Available commands: \n\\action --> open the menu to send a command to an actuator");
+        System.out.println("\\change_params --> open the menu to change sensors parameters");
+        System.out.println("\\light_on --> the light sensor will report anomaly, it's day!");
+        System.out.println("\\light_off --> the light sensor will not report anomaly, it's night!");
+        System.out.println("\\show_actuators_status --> show the current status of the available actuators");
     }
 }
