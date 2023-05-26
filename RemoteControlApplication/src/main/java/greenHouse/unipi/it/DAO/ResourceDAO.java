@@ -67,10 +67,9 @@ public class ResourceDAO {
 
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
 
-            PreparedStatement ps = connection.prepareStatement("UPDATE status = ? WHERE resource = ? AND ip=?;");
+            PreparedStatement ps = connection.prepareStatement("UPDATE actuators SET status = ? WHERE ip=?;");
             ps.setString(1,new_status);
-            ps.setString(2,resource);
-            ps.setString(3,ip);
+            ps.setString(2,ip);
             int row_changed = ps.executeUpdate();
             if (row_changed == 0)
                     throw new Exception();
