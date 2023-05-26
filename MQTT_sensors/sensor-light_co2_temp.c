@@ -162,13 +162,13 @@ static void sense_callback(void *ptr){
 	LOG_INFO("Sono qui!");		
     
     co2_value = fake_co2_sensing();
-	LOG_INFO("CO2 value detected = %d", value);
+	LOG_INFO("CO2 value detected = %d", co2_value);
 
 	light_value = fake_light_sensing();
-	LOG_INFO("Light value detected = %d", value);
+	LOG_INFO("Light value detected = %d", light_value);
     
     temp_value = fake_temp_sensing();
-	LOG_INFO("Temperature value detected = %d", value);
+	LOG_INFO("Temperature value detected = %d", temp_value);
 
 	if(num_period >= NUM_PERIOD_BEFORE_SEND){
         sprintf(pub_topic, "%s", "sensor/co2_light_temp");	

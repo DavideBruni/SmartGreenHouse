@@ -26,7 +26,8 @@ build/cooja/obj/res-light.o: resources/res-light.c \
  ../../../os/net/app-layer/coap/coap-separate.h \
  ../../../os/net/app-layer/coap/coap-observe-client.h \
  ../../../os/dev/leds.h ../../../os/dev/gpio-hal.h \
- ../../../arch/platform/cooja/./dev/gpio-hal-arch.h ../../../os/sys/log.h \
+ ../../../arch/platform/cooja/./dev/gpio-hal-arch.h \
+ ../json_util/json_util.h ../../../os/sys/log.h \
  ../../../os/sys/log-conf.h
 ../../../os/net/app-layer/coap/module-macros.h:
 ../../../os/contiki.h:
@@ -72,5 +73,6 @@ build/cooja/obj/res-light.o: resources/res-light.c \
 ../../../os/dev/leds.h:
 ../../../os/dev/gpio-hal.h:
 ../../../arch/platform/cooja/./dev/gpio-hal-arch.h:
+../json_util/json_util.h:
 ../../../os/sys/log.h:
 ../../../os/sys/log-conf.h:

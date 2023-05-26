@@ -111,7 +111,7 @@ static void sense_callback(void *ptr){
 
     if(value < min_humidity_parameter)
         alarm_state = true;
-    else if(value >= max_humidity_parameter)
+    else if(value > max_humidity_parameter)
         alarm_state = false;
 
     if(alarm_state)

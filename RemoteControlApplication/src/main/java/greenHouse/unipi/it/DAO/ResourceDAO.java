@@ -85,26 +85,26 @@ public class ResourceDAO {
     public void updateStatus(String command){
         if (resource.equals("actuator_window")){
             if(command.equals("open"))
-                updateStatus("open");
+                changeStatus("open");
             else if(command.equals("close"))
-                updateStatus("close");
+                changeStatus("close");
         }else if(resource.equals("actuator_light")){
             if(command.equals("up")){
                 if(status.equals("off"))
-                    updateStatus("level_1");
+                    changeStatus("level_1");
                 else if(status.equals("level_1"))
-                    updateStatus("level_2");
+                    changeStatus("level_2");
             }else if(command.equals("down")){
                 if(status.equals("level_2"))
-                    updateStatus("level_1");
+                    changeStatus("level_1");
                 else if(status.equals("level_1"))
-                    updateStatus("off");
+                    changeStatus("off");
             }
         }else if(resource.equals("actuator_sprinkler")){
             if(command.equals("on"))
-                updateStatus("on");
+                changeStatus("on");
             else if(command.equals("off"))
-                updateStatus("off");
+                changeStatus("off");
         }
     }
 

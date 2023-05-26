@@ -7,6 +7,10 @@
 #include "os/dev/leds.h"
 #include <stdio.h>
 
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "App"
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 // Server IP and resource path
 #define SERVER_EP "coap://[fd00::1]:5683"

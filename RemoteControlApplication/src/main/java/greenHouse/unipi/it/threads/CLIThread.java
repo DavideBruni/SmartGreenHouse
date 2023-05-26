@@ -161,8 +161,13 @@ public class CLIThread extends Thread{
                 }
                 break;
             case "\\light_up":
-                command_value = "up";
-                resourceDAO = ResourceDAO.retrieveInformation("light");
+		if (LightSensor.getInstance().getIsNight()==0){
+                	command_value = "up";
+                	resourceDAO = ResourceDAO.retrieveInformation("light");
+		}else{
+			System.out.println("You must put light on before");
+			return;		
+		}
                 break;
             case "\\light_down":
                 command_value = "down";
