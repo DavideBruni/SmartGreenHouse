@@ -120,18 +120,34 @@ public class CLIThread extends Thread{
             case "\\window_open":
                 command_value = "open";
                 resourceDAO = ResourceDAO.retrieveInformation("window");
+                if(resourceDAO.getStatus().equals(command_value)) {
+                    System.out.println("Window already open");
+                    return;
+                }
                 break;
             case "\\window_close":
                 command_value = "close";
                 resourceDAO = ResourceDAO.retrieveInformation("window");
+                if(resourceDAO.getStatus().equals(command_value)) {
+                    System.out.println("Window already closed");
+                    return;
+                }
                 break;
             case "\\sprinkler_active":
                 command_value = "on";
                 resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
+                if(resourceDAO.getStatus().equals(command_value)) {
+                    System.out.println("Sprinkler already on");
+                    return;
+                }
                 break;
             case "\\sprinkler_deactivate":
                 command_value = "off";
                 resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
+                if(resourceDAO.getStatus().equals(command_value)) {
+                    System.out.println("Sprinkler already off");
+                    return;
+                }
                 break;
             case "\\light_up":
                 command_value = "up";
@@ -145,7 +161,7 @@ public class CLIThread extends Thread{
                 System.out.println("Invalid command");
                 return;
         }
-        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), command_value).start();
+        new CoapClientThread(resourceDAO, command_value).start();
 
     }
 

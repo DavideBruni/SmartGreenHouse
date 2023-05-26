@@ -8,8 +8,8 @@ public class TempSensor extends Sensor{
     private Boolean last_time_light;
     private TempSensor() {
         last_time_light = Boolean.FALSE;
-	min = 15;
-	max = 20;
+	    min = 15;
+	    max = 20;
     }
 
     public static TempSensor getInstance() {
@@ -22,16 +22,16 @@ public class TempSensor extends Sensor{
 
     public void setActionMin(){
         if(Co2Sensor.getInstance().getValue()<Co2Sensor.getInstance().getMin()){        // I cannot close the window, co2 constraints
-            if(!LightSensor.getInstance().getIsNight()) {
+            if(LightSensor.getInstance().getIsNight()!=1) {
                 last_time_light = Boolean.TRUE;
                 ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-                new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "up").start();
+                new CoapClientThread(resourceDAO, "up").start();
             }
         }else{
             //if last time I increase the brightness, I put them down again in order to re-establish the origin situation
             last_time_light = Boolean.FALSE;
             ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("window");
-            new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "close").start();
+            new CoapClientThread(resourceDAO, "close").start();
         }
 
     }
@@ -39,10 +39,10 @@ public class TempSensor extends Sensor{
         if(last_time_light = Boolean.TRUE){
             last_time_light = Boolean.FALSE;        // if the temperature remains HIGH, then I need to open the window
             ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-            new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "down").start();
+            new CoapClientThread(resourceDAO, "down").start();
         }else {
             ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("window");
-            new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "open").start();
+            new CoapClientThread(resourceDAO, "open").start();
         }
     }
 

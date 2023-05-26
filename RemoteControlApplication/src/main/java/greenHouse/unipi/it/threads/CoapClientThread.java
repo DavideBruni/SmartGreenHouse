@@ -1,6 +1,6 @@
 package greenHouse.unipi.it.threads;
 
-import greenHouse.unipi.it.model.HumiditySensor;
+import greenHouse.unipi.it.DAO.ResourceDAO;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.CoAP;
@@ -10,18 +10,16 @@ import org.json.simple.JSONObject;
 
 public class CoapClientThread extends Thread{
 
-    private String actuatorIp;
-    private String resource;
+    private ResourceDAO resourceDAO;
     private String payload;
 
-    public CoapClientThread(String actuatorIp, String resource, String payload) {
-        this.actuatorIp = actuatorIp;
-        this.resource = resource;
+    public CoapClientThread(ResourceDAO resourceDAO, String payload) {
+        this.resourceDAO = resourceDAO;
         this.payload = payload;
     }
 
     public void run() {
-        String uri = "coap://"+actuatorIp+"/"+resource;
+        String uri = "coap://"+resourceDAO.getIp()+"/"+resourceDAO.getResource();
         CoapClient client = new CoapClient(uri);
         Request req = new Request(CoAP.Code.PUT);
         JSONObject jsonObject = new JSONObject();
@@ -29,7 +27,22 @@ public class CoapClientThread extends Thread{
         req.setPayload(jsonObject.toJSONString());
         req.getOptions().setAccept(MediaTypeRegistry.APPLICATION_JSON);
         CoapResponse response = client.advanced(req);
-	System.out.println("Send");
-        System.out.println(response.getResponseText());
+        CoAP.ResponseCode code = response.getCode();
+        switch (code){
+            case CHANGED:
+                resourceDAO.updateStatus(payload);
+                break;
+            case BAD_REQUEST:
+                System.err.println("Internal application error!");
+                break;
+            case BAD_OPTION:
+                System.err.println("BAD_OPTION error");
+                break;
+            default:
+                System.err.println("Actuator error!");
+                resourceDAO.changeStatus("Error");
+                break;
+        }
+        //code.equals(CoAP.ResponseCode.CREATED);
     }
 }

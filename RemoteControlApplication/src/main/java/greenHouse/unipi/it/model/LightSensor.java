@@ -5,7 +5,7 @@ import greenHouse.unipi.it.threads.CoapClientThread;
 
 public class LightSensor extends Sensor{
     private static LightSensor INSTANCE;
-    private static boolean is_night = false;
+    private static int is_night = 0;
     private LightSensor() {
 	min = 32000;
 	max = 100000;
@@ -21,18 +21,21 @@ public class LightSensor extends Sensor{
 
     public void setActionMin(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "up").start();
+        new CoapClientThread(resourceDAO, "up").start();
     }
     public void setActionMax(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-        new CoapClientThread(resourceDAO.getIp(), resourceDAO.getResource(), "down").start();
+        new CoapClientThread(resourceDAO, "down").start();
     }
 
     public void setNight(boolean b) {
-        is_night=b;
+        if(b)
+            is_night = 1;
+        else
+            is_night = 0;
     }
 
-    public boolean getIsNight() {
+    public int getIsNight() {
         return is_night;
     }
 }

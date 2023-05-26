@@ -1,6 +1,5 @@
 package greenHouse.unipi.it.threads;
 
-import greenHouse.unipi.it.DAO.ResourceDAO;
 import greenHouse.unipi.it.model.*;
 
 import java.sql.*;
@@ -63,7 +62,7 @@ public class PollingDBThread extends Thread{
 		                int value = values.get(type);
 		                String action = null;
 		                if(type.equals("light")){
-		                    if(LightSensor.getInstance().getIsNight())
+		                    if(LightSensor.getInstance().getIsNight()==1)
 		                        continue;
 		                }
 		                if(value < types.get(type).getMin()){
