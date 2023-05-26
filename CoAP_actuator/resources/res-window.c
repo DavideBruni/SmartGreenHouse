@@ -10,7 +10,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "App"
-#define LOG_LEVEL LOG_LEVEL_APP
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 static uint8_t window_status = 0; // 0 closed, 1 opened
 

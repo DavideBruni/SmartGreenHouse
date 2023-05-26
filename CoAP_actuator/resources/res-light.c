@@ -10,7 +10,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "App"
-#define LOG_LEVEL LOG_LEVEL_APP
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 static uint8_t light_status = 0; // 0 off, 1 medium brightness, 2 max brightness
 
