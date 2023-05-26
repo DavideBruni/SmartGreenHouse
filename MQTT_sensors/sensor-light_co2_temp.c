@@ -57,8 +57,8 @@ static char app_buffer[APP_BUFFER_SIZE];
 /* Various states */
 static uint8_t state;
 
-#define STATE_INIT    		0
-#define STATE_NET_OK    	1
+#define STATE_INIT    		    0
+#define STATE_NET_OK    	    1
 #define STATE_CONNECTING        2
 #define STATE_CONNECTED         3
 #define STATE_SUBSCRIBING1      4
@@ -98,13 +98,14 @@ static int temp_value = 20;
 static uint8_t sub_num = 0;
 
 static int button_pressed = 0;
+static bool is_night = false;
 static int flag_over_under = -1;		// -1 normal value, 0 over values, 1 under values
-static int min_light_parameter = 320000;
-static int max_light_parameter = 1000000;
+static int min_light_parameter = 32000;
+static int max_light_parameter = 100000;
 static int min_co2_parameter = 300;
 static int max_co2_parameter = 400;
-static int min_temp_parameter = 18;
-static int max_temp_parameter = 22;
+static int min_temp_parameter = 15;
+static int max_temp_parameter = 20;
 
 #define SENSE_PERIOD 		5		// seconds
 #define NUM_PERIOD_BEFORE_SEND  6 		// every 30 second there's one pub
@@ -161,21 +162,22 @@ static void sense_callback(void *ptr){
 	LOG_INFO("Sono qui!");		
     
     co2_value = fake_co2_sensing();
-	printf("Co2 value: %d\n", co2_value);
+	LOG_INFO("CO2 value detected = %d", value);
 
 	light_value = fake_light_sensing();
-	printf("Light value: %d\n", light_value);
+	LOG_INFO("Light value detected = %d", value);
     
     temp_value = fake_temp_sensing();
-	printf("Temp value: %d\n", temp_value);
+	LOG_INFO("Temperature value detected = %d", value);
 
 	if(num_period >= NUM_PERIOD_BEFORE_SEND){
         sprintf(pub_topic, "%s", "sensor/co2_light_temp");	
         sprintf(app_buffer, "{ \"co2_value\": %d, \"light_value\": %d, \"temp_value\": %d }", co2_value, light_value, temp_value);
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 		num_period = 0;
-	}else if(light_value < min_light_parameter || light_value > max_light_parameter || 
-             temp_value < min_temp_parameter || temp_value > max_temp_parameter || co2_value < min_co2_parameter){
+	}else if(   co2_value < min_co2_parameter ||
+                temp_value < min_temp_parameter || temp_value > max_temp_parameter ||
+                (!is_night && (light_value < min_light_parameter || light_value > max_light_parameter))){
         sprintf(pub_topic, "%s", "sensor/co2_light_temp");	
         sprintf(app_buffer, "{ \"co2_value\": %d, \"light_value\": %d, \"temp_value\": %d }", co2_value, light_value, temp_value);
         mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
@@ -195,21 +197,22 @@ static void pub_handler_co2(const char *topic, uint16_t topic_len, const uint8_t
     //sscanf((char *)chunk, "{\"max_co2_parameter\":%d,\"min_co2_parameter\":%d}", &max_co2_parameter, &min_co2_parameter);
     min_co2_parameter = findJsonField_Number((char *)chunk, "min_co2_parameter");
     max_co2_parameter = findJsonField_Number((char *)chunk, "max_co2_parameter");
-    LOG_INFO("Pub Handler: topic=param/co2, min=%d max=%d\n", min_co2_parameter, max_co2_parameter);
+    LOG_INFO("CO2 Pub Handler: topic=param/co2, min=%d max=%d\n", min_co2_parameter, max_co2_parameter);
 }
 
 static void pub_handler_light(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
     //sscanf((char *)chunk, "{\"max_light_parameter\":%d,\"min_light_parameter\":%d}", &max_light_parameter, &min_light_parameter);
     min_light_parameter = findJsonField_Number((char *)chunk, "min_light_parameter");
     max_light_parameter = findJsonField_Number((char *)chunk, "max_light_parameter");
-    LOG_INFO("Pub Handler: topic=param/light, min=%d max=%d\n", min_light_parameter, max_light_parameter);
+    is_night = (bool)findJsonField_Number((char *)chunk, "is_night");
+    LOG_INFO("Light Pub Handler: topic=param/light, min=%d max=%d\n", min_light_parameter, max_light_parameter);
 }
 
 static void pub_handler_temp(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
     //sscanf((char *)chunk, "{\"max_temp_parameter\":%d,\"min_temp_parameter\":%d}", &max_temp_parameter, &min_temp_parameter);
     min_temp_parameter = findJsonField_Number((char *)chunk, "min_temp_parameter");
     max_temp_parameter = findJsonField_Number((char *)chunk, "max_temp_parameter");
-    LOG_INFO("Pub Handler: topic=param/temp, min=%d max=%d\n", min_temp_parameter, max_temp_parameter);
+    LOG_INFO("Temp Pub Handler: topic=param/temp, min=%d max=%d\n", min_temp_parameter, max_temp_parameter);
 }
 
 static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data){

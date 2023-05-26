@@ -29,12 +29,11 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
     const uint8_t *chunk;
     
     len = coap_get_payload(request,&chunk);
-	printf("Chunk: %s\n",(char *)chunk);
 	
     if(len>0){
 	    //sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}", action);
         action = findJsonField_String((char *)chunk, "action");
-        printf("ACTION: %s\n", action);        //stampa tipo: Chunk: {"action":"up"}
+        LOG_INFO("received command: action=%s\n", action);
 	}
 
     if(action!=NULL && strlen(action)!=0){
@@ -46,8 +45,10 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
                 leds_set(LEDS_GREEN);               // send respponse back ?
                 light_status++;
             }else{
-                printf("Light has max brightness"); // send respponse back ?
+                LOG_ERR("Light has max brightness"); // send respponse back ?
             }
+
+		    coap_set_status_code(response, CHANGED_2_04);
 	    }
         else if((strncmp(action, "down", len) == 0)){
             if(light_status == 2){
@@ -57,12 +58,15 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
                 leds_off(LEDS_YELLOW);               // send respponse back ?
                 light_status--;
             }else{
-                printf("Light is turned off "); // send respponse back ?
+                LOG_INFO("Light is turned off "); // send respponse back ?
             }
+
+		    coap_set_status_code(response, CHANGED_2_04);
 	    }
         else if((strncmp(action, "off", len) == 0)){
             light_status = 0;
-            leds_off(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_RED) | LEDS_NUM_TO_MASK(LEDS_YELLOW)); 
+            leds_off(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_RED) | LEDS_NUM_TO_MASK(LEDS_YELLOW));
+            coap_set_status_code(response, CHANGED_2_04);
 	    }
         else
             coap_set_status_code(response, BAD_OPTION_4_02);
