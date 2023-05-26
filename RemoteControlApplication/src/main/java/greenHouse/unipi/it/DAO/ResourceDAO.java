@@ -84,12 +84,12 @@ public class ResourceDAO {
     }
 
     public void updateStatus(String command){
-        if (resource.equals("window")){
+        if (resource.equals("actuator_window")){
             if(command.equals("open"))
                 updateStatus("open");
             else if(command.equals("close"))
                 updateStatus("close");
-        }else if(resource.equals("light")){
+        }else if(resource.equals("actuator_light")){
             if(command.equals("up")){
                 if(status.equals("off"))
                     updateStatus("level_1");
@@ -101,7 +101,7 @@ public class ResourceDAO {
                 else if(status.equals("level_1"))
                     updateStatus("off");
             }
-        }else if(resource.equals("sprinkler")){
+        }else if(resource.equals("actuator_sprinkler")){
             if(command.equals("on"))
                 updateStatus("on");
             else if(command.equals("off"))

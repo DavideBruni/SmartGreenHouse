@@ -27,21 +27,23 @@ public class CoapClientThread extends Thread{
         req.setPayload(jsonObject.toJSONString());
         req.getOptions().setAccept(MediaTypeRegistry.APPLICATION_JSON);
         CoapResponse response = client.advanced(req);
-        CoAP.ResponseCode code = response.getCode();
-        switch (code){
-            case CHANGED:
-                resourceDAO.updateStatus(payload);
-                break;
-            case BAD_REQUEST:
-                System.err.println("Internal application error!");
-                break;
-            case BAD_OPTION:
-                System.err.println("BAD_OPTION error");
-                break;
-            default:
-                System.err.println("Actuator error!");
-                resourceDAO.changeStatus("Error");
-                break;
+        if (response!=null) {
+            CoAP.ResponseCode code = response.getCode();
+            switch (code) {
+                case CHANGED:
+                    resourceDAO.updateStatus(payload);
+                    break;
+                case BAD_REQUEST:
+                    System.err.println("Internal application error!");
+                    break;
+                case BAD_OPTION:
+                    System.err.println("BAD_OPTION error");
+                    break;
+                default:
+                    System.err.println("Actuator error!");
+                    resourceDAO.changeStatus("Error");
+                    break;
+            }
         }
     }
 }
