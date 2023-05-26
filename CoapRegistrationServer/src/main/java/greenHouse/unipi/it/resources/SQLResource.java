@@ -21,7 +21,6 @@ public class SQLResource extends CoapResource {
 
     public SQLResource(String name) {
         super(name);
-        setObservable(true);        //TODO da controllare se setobseravable
     }
 
     public void handlePOST(CoapExchange exchange) {
@@ -32,7 +31,7 @@ public class SQLResource extends CoapResource {
             JSONParser parser = new JSONParser();
             json = (JSONObject) parser.parse(s);
         }catch (Exception err){
-            return; //TODO change it!
+            System.err.println("Json format not valid!");
         }
 
         Response response;
@@ -41,9 +40,10 @@ public class SQLResource extends CoapResource {
 		System.out.println(addr);
             try (Connection connection = DriverManager.getConnection(url, username, password)) {
 		
-                PreparedStatement ps = connection.prepareStatement("REPLACE INTO actuators (ip,resource) VALUES(?,?);");
+                PreparedStatement ps = connection.prepareStatement("REPLACE INTO actuators (ip,resource,status) VALUES(?,?,?);");
                 ps.setString(1,String.valueOf(addr).substring(1));
                 ps.setString(2, (String)json.get("name"));
+                ps.setString(3,(String)json.get("status"));
                 ps.executeUpdate();
                 if(ps.getUpdateCount()<1){
                     response = new Response(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
