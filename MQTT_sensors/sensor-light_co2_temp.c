@@ -157,9 +157,7 @@ static int fake_temp_sensing(){
 static void sense_callback(void *ptr){
     if (state != STATE_SUBSCRIBED3){
         return;
-    }
-
-	LOG_INFO("Sono qui!");		
+    }	
     
     co2_value = fake_co2_sensing();
 	LOG_INFO("CO2 value detected = %d", co2_value);
@@ -395,9 +393,13 @@ PROCESS_THREAD(sensor_co2_light_temp, ev, data){
         }else if(ev == button_hal_press_event) {
 			button_pressed++;
 			if(button_pressed == 1){
-				temp_in_range = co2_in_range = 0;	// co2 e temp out of range			
+				temp_in_range = 0;		// temp out of range			
 			}else if(button_pressed == 2){
+				temp_in_range = 1;
 				light_in_range = 0;		// light out of range
+			}else if(button_pressed == 2){
+				co2_in_range =0;
+				light_in_range = 1;		// co2 out of range
 			}else if(button_pressed == 3){
 				button_pressed = 0;
 				light_in_range = temp_in_range = co2_in_range = 1; // normal value
