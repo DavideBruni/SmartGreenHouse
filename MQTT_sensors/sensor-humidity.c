@@ -24,7 +24,7 @@
 #ifdef MQTT_CLIENT_CONF_LOG_LEVEL
 #define LOG_LEVEL MQTT_CLIENT_CONF_LOG_LEVEL
 #else
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -80,9 +80,9 @@ static struct ctimer sensing_timer;
 static mqtt_status_t status;
 static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
-static int value = 15;
-static uint8_t min_humidity_parameter = 10;
-static uint8_t max_humidity_parameter = 30;
+static int value = 60;
+static uint8_t min_humidity_parameter = 50;
+static uint8_t max_humidity_parameter = 75;
 static bool alarm_state = false;
 
 #define SENSE_PERIOD 		4		// seconds
@@ -107,7 +107,7 @@ static int fake_humidity_sensing(int value){
 
 static void sense_callback(void *ptr){	
 	value = fake_humidity_sensing(value);
-	printf("I'm sensing - value %d", value);
+	LOG_INFO("Humidity value detected = %d", value);
 
     if(value < min_humidity_parameter)
         alarm_state = true;
@@ -115,9 +115,9 @@ static void sense_callback(void *ptr){
         alarm_state = false;
 
     if(alarm_state)
-	    printf("\t ALERT STATE\n");
+	    LOG_INFO("\t -> ALERT STATE\n");
     else
-        printf("\n");
+        LOG_INFO("\n");
 
     if(num_period >= NUM_PERIOD_BEFORE_SEND){
         sprintf(pub_topic, "%s", "sensor/humidity");	
@@ -149,19 +149,19 @@ static void pub_handler_humidity(const char *topic, uint16_t topic_len, const ui
     //sscanf((char *)chunk, "%hhd_%hhd", &min_humidity_parameter, &max_humidity_parameter);
     min_humidity_parameter = (uint8_t)findJsonField_Number((char *)chunk, "min_humidity_parameter");
     max_humidity_parameter = (uint8_t)findJsonField_Number((char *)chunk, "max_humidity_parameter");
-    printf("Pub Handler: topic=HUMIDITY, min=%hhd max=%hhd\n", min_humidity_parameter, max_humidity_parameter);
+    LOG_INFO("Humidity Pub Handler: topic=HUMIDITY, min=%hhd max=%hhd\n", min_humidity_parameter, max_humidity_parameter);
 }
 
 static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data){
     switch(event) {
     case MQTT_EVENT_CONNECTED: {
-        printf("Application has a MQTT connection\n");
+        LOG_INFO("Application has a MQTT connection\n");
 
         state = STATE_CONNECTED;
         break;
     }
     case MQTT_EVENT_DISCONNECTED: {
-        printf("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
+        LOG_INFO("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
 
         state = STATE_DISCONNECTED;
         process_poll(&sensor_humidity);
@@ -180,25 +180,25 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data
             mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
 
             if(suback_event->success) {
-            printf("Application is subscribed to topic successfully\n");
+            LOG_INFO("Application is subscribed to topic successfully\n");
             } else {
-            printf("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
+            LOG_INFO("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
             }
         #else
-            printf("Application is subscribed to topic successfully\n");
+            LOG_INFO("Application is subscribed to topic successfully\n");
         #endif
             break;
     }
     case MQTT_EVENT_UNSUBACK: {
-        printf("Application is unsubscribed to topic successfully\n");
+        LOG_INFO("Application is unsubscribed to topic successfully\n");
         break;
     }
     case MQTT_EVENT_PUBACK: {
-        printf("Publishing complete.\n");
+        LOG_INFO("Publishing complete.\n");
         break;
     }
     default:
-        printf("Application got a unhandled MQTT event: %i\n", event);
+        LOG_INFO("Application got a unhandled MQTT event: %i\n", event);
         break;
     }
 }
@@ -213,7 +213,7 @@ static bool have_connectivity(void){
 
 PROCESS_THREAD(sensor_humidity, ev, data){
     PROCESS_BEGIN();    
-    printf("MQTT sensor_humidity started\n");
+    LOG_INFO("MQTT sensor_humidity started\n");
 
     // Initialize the ClientID as MAC address
     snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x%02x%02x%02x",
@@ -246,7 +246,7 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             
             if(state == STATE_NET_OK){
                 // Connect to MQTT broker
-                printf("Connecting to MQTT broker!\n");
+                LOG_INFO("Connecting to MQTT broker!\n");
                 
                 memcpy(broker_address, broker_ip, strlen(broker_ip));
                 
@@ -257,13 +257,10 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             }
             
             if(state==STATE_CONNECTED){
-            
-                // Subscribe to a topic
+                // Subscribing to topic: humidity
                 strcpy(sub_topic,"param/humidity");
-
                 status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
-
-                printf("Subscribing to param/humidity topic!\n");
+                LOG_INFO("Subscribing to param/humidity topic!\n");
                 if(status == MQTT_STATUS_OUT_QUEUE_FULL) {
                     LOG_ERR("Tried to subscribe but command queue was full!\n");
                     PROCESS_EXIT();

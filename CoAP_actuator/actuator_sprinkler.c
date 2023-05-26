@@ -10,7 +10,7 @@
 
 // Server IP and resource path
 #define SERVER_EP "coap://[fd00::1]:5683"
-#define NODE_NAME_JSON "{\"name\":\"actuator_sprinkler\"}"
+#define NODE_NAME_JSON "{\"name\":\"actuator_sprinkler\",\"status\":\"off\"}"
 #define MAX_REGISTRATION_RETRY 3
 
 static coap_endpoint_t server_ep;
@@ -20,11 +20,11 @@ static int max_registration_retry = MAX_REGISTRATION_RETRY;
 
 void client_chunk_handler(coap_message_t *response){
 	if(response == NULL) {
-		printf("Request timed out\n");
+		LOG_ERR("Request timed out\n");
 	}else if(response->code != 65){
-		printf("Error: %d\n",response->code);	
+		LOG_ERR("Error: %d\n",response->code);	
 	}else{
-		printf("OK\n");
+		LOG_INFO("Registration successful\n");
 		max_registration_retry = 0;		// if = 0 --> registration ok!
 		return;
 	}

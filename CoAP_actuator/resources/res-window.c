@@ -30,28 +30,29 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
 	
     
     len = coap_get_payload(request,&chunk);
-	printf("Chunk: %s\n",(char *)chunk);
 	
     if(len>0){
 	    //sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
         action = findJsonField_String((char *)chunk, "action");
-        printf("ACTION: %s\n", action);        //stampa tipo: Chunk: {"action":"up"}
+        LOG_INFO("received command: action=%s\n", action);
 	}  
     
     if(action!=NULL && strlen(action)!=0){
         if((strncmp(action, "open", len) == 0) && window_status==0){
             leds_set(LEDS_GREEN);
 	        window_status = 1;
+		    coap_set_status_code(response, CHANGED_2_04);
 	    }
         else if((strncmp(action, "close", len) == 0) && window_status==1){
             leds_set(LEDS_RED);
 	        window_status = 0;
+		    coap_set_status_code(response, CHANGED_2_04);
 	    }
         else
             coap_set_status_code(response, BAD_OPTION_4_02);
     }
     else{
-	    coap_set_status_code(response, BAD_REQUEST_4_00);
+        coap_set_status_code(response, BAD_REQUEST_4_00);
     }
 
     free(action);
