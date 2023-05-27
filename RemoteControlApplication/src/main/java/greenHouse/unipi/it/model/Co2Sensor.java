@@ -22,7 +22,8 @@ public class Co2Sensor extends Sensor{
 
     public void setActionMin(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("window");
-        new CoapClientThread(resourceDAO, "open").start();
+        if(resourceDAO.getStatus().equals("close"))
+            new CoapClientThread(resourceDAO, "open").start();
     }
     public void setActionMax(){}
 

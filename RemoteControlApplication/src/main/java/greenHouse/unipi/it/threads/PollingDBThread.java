@@ -66,7 +66,6 @@ public class PollingDBThread extends Thread{
 		                        continue;
 		                }
 		                if(value < types.get(type).getMin()){
-
 		                    types.get(type).setActionMin();
 		                }else if(value >= types.get(type).getMax()){
 
@@ -81,6 +80,7 @@ public class PollingDBThread extends Thread{
 		} catch (InterruptedException e) {
 		    throw new RuntimeException(e);
 		}
+		values.clear();
 	}
     }
 }

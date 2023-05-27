@@ -21,11 +21,13 @@ public class LightSensor extends Sensor{
 
     public void setActionMin(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-        new CoapClientThread(resourceDAO, "up").start();
+        if(!resourceDAO.getStatus().equals("level_2"))
+            new CoapClientThread(resourceDAO, "up").start();
     }
     public void setActionMax(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-        new CoapClientThread(resourceDAO, "down").start();
+        if(!resourceDAO.getStatus().equals("off"))
+            new CoapClientThread(resourceDAO, "down").start();
     }
 
     public void setNight(boolean b) {

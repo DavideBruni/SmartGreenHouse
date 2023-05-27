@@ -20,10 +20,12 @@ public class HumiditySensor extends Sensor{
     }
     public void setActionMin(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
-        new CoapClientThread(resourceDAO, "on").start();
+        if(resourceDAO.getStatus().equals("off"))
+            new CoapClientThread(resourceDAO, "on").start();
     }
     public void setActionMax(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
-        new CoapClientThread(resourceDAO, "off").start();
+        if(resourceDAO.getStatus().equals("on"))
+            new CoapClientThread(resourceDAO, "off").start();
     }
 }
