@@ -107,8 +107,8 @@ static int max_co2_parameter = 400;
 static int min_temp_parameter = 15;
 static int max_temp_parameter = 20;
 
-#define SENSE_PERIOD 		5		// seconds
-#define NUM_PERIOD_BEFORE_SEND  6 		// every 30 second there's one pub
+#define SENSE_PERIOD 		6		// seconds
+#define NUM_PERIOD_BEFORE_SEND  6 		// every 36 second there's one pub
 
 static int num_period = 0;
 static int is_first_pub_flag = 1;
@@ -397,10 +397,10 @@ PROCESS_THREAD(sensor_co2_light_temp, ev, data){
 			}else if(button_pressed == 2){
 				temp_in_range = 1;
 				light_in_range = 0;		// light out of range
-			}else if(button_pressed == 2){
+			}else if(button_pressed == 3){
 				co2_in_range =0;
 				light_in_range = 1;		// co2 out of range
-			}else if(button_pressed == 3){
+			}else if(button_pressed == 4){
 				button_pressed = 0;
 				light_in_range = temp_in_range = co2_in_range = 1; // normal value
 							

@@ -7,7 +7,7 @@ public class HumiditySensor extends Sensor{
     private static HumiditySensor INSTANCE;
 
     private HumiditySensor() {
-	min = 50;
+	min = 55;
 	max = 75;
     }
 
@@ -20,6 +20,7 @@ public class HumiditySensor extends Sensor{
     }
     public void setActionMin(){
         ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
+	System.out.println("Azione per il minimo");
         if(resourceDAO.getStatus().equals("off"))
             new CoapClientThread(resourceDAO, "on").start();
     }

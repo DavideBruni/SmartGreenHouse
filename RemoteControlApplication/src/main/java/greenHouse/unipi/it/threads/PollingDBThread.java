@@ -31,14 +31,13 @@ public class PollingDBThread extends Thread{
 	
 	while(true){        
 		try {
-		    sleep(10*1000);     //30 seconds
+		    sleep(10*1000);     //10 seconds
 		    // read from DB
 		    try (Connection connection = DriverManager.getConnection(url, username, password)) {
 			
 		        java.util.Date date = new java.util.Date();
 		        Timestamp tempTimestamp = new java.sql.Timestamp(date.getTime());     // next time, I'll check if there will be command after this timestamp
 		        for (String str : types.keySet()) {
-
 		            PreparedStatement ps = connection.prepareStatement(
 		                    "SELECT value FROM dataSensed WHERE timestamp > ? AND type = ? ORDER BY timestamp DESC LIMIT 1;");
 		            ps.setTimestamp(1, lastTimestamp);
@@ -60,6 +59,7 @@ public class PollingDBThread extends Thread{
 		        for(String type : types.keySet()){      // for each kind of sensor
 		            if(values.containsKey(type)){       // check if there's a new value for each type
 		                int value = values.get(type);
+				System.out.println("Type: "+type+" --> value: "+value);
 		                String action = null;
 		                if(type.equals("light")){
 		                    if(LightSensor.getInstance().getIsNight()==1)

@@ -81,13 +81,13 @@ static mqtt_status_t status;
 static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
 static int value = 60;
-static uint8_t min_humidity_parameter = 50;
+static uint8_t min_humidity_parameter = 55;
 static uint8_t max_humidity_parameter = 75;
 static bool alarm_state = false;
 
-#define SENSE_PERIOD 		4		// seconds
-#define SENSE_PERIOD_ON_ALERT 	2		// seconds
-#define NUM_PERIOD_BEFORE_SEND  6 		// every 30 second there's one pub
+#define SENSE_PERIOD 		6		// seconds
+#define SENSE_PERIOD_ON_ALERT 	3		// seconds
+#define NUM_PERIOD_BEFORE_SEND  6 		// every 36 second there's one pub
 
 static int num_period = 0;
 static int is_first_pub_flag = 1;
@@ -100,7 +100,7 @@ static int fake_humidity_sensing(int value){
         return value;
     }
     else if(alarm_state)
-        return ++value;
+        return value += 3;
     else
         return (rand() %(max_humidity_parameter - min_humidity_parameter)) + min_humidity_parameter;
 }
@@ -275,14 +275,7 @@ PROCESS_THREAD(sensor_humidity, ev, data){
                     ctimer_set(&sensing_timer, SENSE_PERIOD * CLOCK_SECOND, sense_callback, NULL);	
                     is_first_pub_flag = 0;	
                 }
-                // Publish something
-               // sprintf(pub_topic, "%s", "sensor/humidity");
-                
-               // sprintf(app_buffer, "report %d", value);    //### da togliere
-               // value++;                                    //### da togliere
-                    
-               // mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer,
-               // strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+           
             
             } else if ( state == STATE_DISCONNECTED ){
             	LOG_ERR("Disconnected from MQTT broker\n");	
@@ -295,8 +288,8 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
         }
         else if(ev == button_hal_press_event){
-            value = min_humidity_parameter - 3;
-            //sense_callback(NULL);
+            value = min_humidity_parameter - 6;
+            
         }
 
     }
