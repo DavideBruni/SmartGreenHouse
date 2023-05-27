@@ -81,7 +81,7 @@ static mqtt_status_t status;
 static char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
 static int value = 60;
-static uint8_t min_humidity_parameter = 55;
+static uint8_t min_humidity_parameter = 60;
 static uint8_t max_humidity_parameter = 75;
 static bool alarm_state = false;
 
@@ -100,24 +100,17 @@ static int fake_humidity_sensing(int value){
         return value;
     }
     else if(alarm_state)
-        return value += 3;
+        return value += 4;
     else
         return (rand() %(max_humidity_parameter - min_humidity_parameter)) + min_humidity_parameter;
 }
 
 static void sense_callback(void *ptr){	
 	value = fake_humidity_sensing(value);
-	LOG_INFO("Humidity value detected = %d", value);
+	LOG_INFO("Humidity value detected = %d%s", value,(alarm_state)? "\t -> ALERT STATE\n":"\n");
 
     if(value < min_humidity_parameter)
         alarm_state = true;
-    else if(value > max_humidity_parameter)
-        alarm_state = false;
-
-    if(alarm_state)
-	    LOG_INFO("\t -> ALERT STATE\n");
-    else
-        LOG_INFO("\n");
 
     if(num_period >= NUM_PERIOD_BEFORE_SEND){
         sprintf(pub_topic, "%s", "sensor/humidity");	
@@ -133,6 +126,9 @@ static void sense_callback(void *ptr){
     else{
         num_period++;
     }
+	
+    if(value >= max_humidity_parameter)
+        alarm_state = false;
     
     if(alarm_state)
         ctimer_set(&sensing_timer, SENSE_PERIOD_ON_ALERT * CLOCK_SECOND, sense_callback, NULL);
@@ -288,7 +284,7 @@ PROCESS_THREAD(sensor_humidity, ev, data){
             etimer_set(&e_timer, STATE_MACHINE_PERIODIC);
         }
         else if(ev == button_hal_press_event){
-            value = min_humidity_parameter - 6;
+            value = min_humidity_parameter - 9;
             
         }
 

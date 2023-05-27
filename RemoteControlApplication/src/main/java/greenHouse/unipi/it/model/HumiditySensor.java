@@ -7,7 +7,7 @@ public class HumiditySensor extends Sensor{
     private static HumiditySensor INSTANCE;
 
     private HumiditySensor() {
-	min = 55;
+	min = 60;
 	max = 75;
     }
 
