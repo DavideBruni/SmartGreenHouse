@@ -44,8 +44,8 @@ public class CLIThread extends Thread{
                     System.out.println("What do you want to do?");
                     System.out.println("\\window_open --> to open window");
                     System.out.println("\\window_close --> to close window");
-                    System.out.println("\\sprinkler_active --> to active sprinkler");
-                    System.out.println("\\sprinkler_deactivate --> to deactivate sprinkler");
+                    System.out.println("\\sprinkler_on --> to active sprinkler");
+                    System.out.println("\\sprinkler_off --> to deactivate sprinkler");
                     System.out.println("\\light_up --> to increase light brightness");
                     System.out.println("\\light_down --> to decrease light brightness");
                     try {
@@ -98,6 +98,13 @@ public class CLIThread extends Thread{
                         LightSensor.getInstance().setNight(false);
                     }else{
                         LightSensor.getInstance().setNight(true);
+			command_value = "off";
+		        resourceDAO = ResourceDAO.retrieveInformation("light");
+		        if(resourceDAO.getStatus().equals(command_value)) {
+		            //System.out.println("Light already off");
+		            break
+		        }
+			new CoapClientThread(resourceDAO, command_value).start();
                     }
                     try {
                         MqttClient client = new MqttClient(broker, clientId);
@@ -144,7 +151,7 @@ public class CLIThread extends Thread{
                     return;
                 }
                 break;
-            case "\\sprinkler_active":
+            case "\\sprinkler_on":
                 command_value = "on";
                 resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
                 if(resourceDAO.getStatus().equals(command_value)) {
@@ -152,7 +159,7 @@ public class CLIThread extends Thread{
                     return;
                 }
                 break;
-            case "\\sprinkler_deactivate":
+            case "\\sprinkler_off":
                 command_value = "off";
                 resourceDAO = ResourceDAO.retrieveInformation("sprinkler");
                 if(resourceDAO.getStatus().equals(command_value)) {
