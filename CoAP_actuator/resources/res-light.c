@@ -39,33 +39,37 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
     if(action!=NULL && strlen(action)!=0){
         if((strncmp(action, "up", len) == 0)){
             if(light_status == 0){
-                leds_set(LEDS_YELLOW);
+                leds_set(LEDS_GREEN);
+                leds_on(LEDS_RED);		// RED && GREEEN --> YELLOW
                 light_status++;
             }else if(light_status == 1){
-                leds_set(LEDS_GREEN);               // send respponse back ?
+                leds_set(LEDS_GREEN);
                 light_status++;
             }else{
-                LOG_ERR("Light has max brightness"); // send respponse back ?
+                LOG_ERR("Light has max brightness");
             }
 
 		    coap_set_status_code(response, CHANGED_2_04);
 	    }
         else if((strncmp(action, "down", len) == 0)){
             if(light_status == 2){
-                leds_set(LEDS_YELLOW);
+                leds_set(LEDS_GREEN);
+                leds_on(LEDS_RED);		// RED && GREEEN --> YELLOW
                 light_status--;
             }else if(light_status == 1){
-                leds_off(LEDS_YELLOW);               // send respponse back ?
+                leds_off(LEDS_GREEN);
+                leds_off(LEDS_RED);		// RED && GREEEN --> YELLOW
                 light_status--;
             }else{
-                LOG_INFO("Light is turned off "); // send respponse back ?
+                LOG_INFO("Light is turned off ");
             }
 
 		    coap_set_status_code(response, CHANGED_2_04);
 	    }
         else if((strncmp(action, "off", len) == 0)){
             light_status = 0;
-            leds_off(LEDS_NUM_TO_MASK(LEDS_GREEN) | LEDS_NUM_TO_MASK(LEDS_RED) | LEDS_NUM_TO_MASK(LEDS_YELLOW));
+            leds_off(LEDS_GREEN);
+            leds_off(LEDS_RED);
             coap_set_status_code(response, CHANGED_2_04);
 	    }
         else
