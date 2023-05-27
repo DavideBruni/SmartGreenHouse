@@ -403,8 +403,9 @@ PROCESS_THREAD(sensor_co2_light_temp, ev, data){
 			}else if(button_pressed == 3){
 				button_pressed = 0;
 				light_in_range = temp_in_range = co2_in_range = 1; // normal value
-				flag_over_under = -1;			
-			}		
+							
+			}
+            flag_over_under = -1;		
 			
 		
 	}
