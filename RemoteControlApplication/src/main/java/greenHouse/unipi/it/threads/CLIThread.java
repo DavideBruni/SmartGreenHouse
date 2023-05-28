@@ -92,8 +92,8 @@ public class CLIThread extends Thread{
                         e.printStackTrace();
                     }
                     break;
-                case "\\light_on":
-                case "\\light_off":
+                case "\\set_day_mode":
+                case "\\set_night_mode":
                     if(command.equals("\\light_on")){
                         LightSensor.getInstance().setNight(false);
                     }else{
@@ -260,8 +260,8 @@ public class CLIThread extends Thread{
 
         System.out.println("Available commands: \n\\action --> open the menu to send a command to an actuator");
         System.out.println("\\change_params --> open the menu to change sensors parameters");
-        System.out.println("\\light_on --> the light sensor will report anomaly, it's day!");
-        System.out.println("\\light_off --> the light sensor will not report anomaly, it's night!");
+        System.out.println("\\set_day_mode --> the light sensor will report anomaly, it's day!");
+        System.out.println("\\set_night_mode --> the light sensor will not report anomaly, it's night!");
         System.out.println("\\show_actuators_status --> show the current status of the available actuators");
     }
 }
