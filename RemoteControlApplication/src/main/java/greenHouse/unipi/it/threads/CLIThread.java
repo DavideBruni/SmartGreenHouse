@@ -98,11 +98,11 @@ public class CLIThread extends Thread{
                         LightSensor.getInstance().setNight(false);
                     }else{
                         LightSensor.getInstance().setNight(true);
-			command_value = "off";
-		        resourceDAO = ResourceDAO.retrieveInformation("light");
+			String command_value = "off";
+		        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
 		        if(resourceDAO.getStatus().equals(command_value)) {
 		            //System.out.println("Light already off");
-		            break
+		            break;
 		        }
 			new CoapClientThread(resourceDAO, command_value).start();
                     }

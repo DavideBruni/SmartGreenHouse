@@ -31,7 +31,7 @@ public class PollingDBThread extends Thread{
 	
 	while(true){        
 		try {
-		    sleep(8*1000);     //10 seconds
+		    sleep(7*1000);     //10 seconds
 		    // read from DB
 		    try (Connection connection = DriverManager.getConnection(url, username, password)) {
 			
