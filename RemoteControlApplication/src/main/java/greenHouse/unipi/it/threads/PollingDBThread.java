@@ -59,7 +59,7 @@ public class PollingDBThread extends Thread{
 		        for(String type : types.keySet()){      // for each kind of sensor
 		            if(values.containsKey(type)){       // check if there's a new value for each type
 		                int value = values.get(type);
-				System.out.println("Type: "+type+" --> value: "+value);
+				
 		                String action = null;
 		                if(type.equals("light")){
 		                    if(LightSensor.getInstance().getIsNight()==1)
