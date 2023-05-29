@@ -16,6 +16,10 @@ import java.util.Map;
 
 public class CLIThread extends Thread{
 
+    /**
+     * This class implements the Thread used for retrieve information from Command from CLI
+     * */
+
     private static final String broker = "tcp://127.0.0.1:1883";
     private static final String clientId = "RemoteControlApp";
     private static Map<String, Boolean> is_changed = new HashMap<>();
@@ -98,13 +102,6 @@ public class CLIThread extends Thread{
                         LightSensor.getInstance().setNight(false);
                     }else{
                         LightSensor.getInstance().setNight(true);
-			String command_value = "off";
-		        ResourceDAO resourceDAO = ResourceDAO.retrieveInformation("light");
-		        if(resourceDAO.getStatus().equals(command_value)) {
-		            //System.out.println("Light already off");
-		            break;
-		        }
-			new CoapClientThread(resourceDAO, command_value).start();
                     }
                     try {
                         MqttClient client = new MqttClient(broker, clientId);
@@ -132,6 +129,24 @@ public class CLIThread extends Thread{
     }
 
     private void active_actuator(String command){
+        /**
+         * Activates an actuator by sending a CoAP command.
+         *
+         *  @param command the command to send to the actuator
+         *          *                (e.g., "\\window_open" to open a window,
+         *          *                "\\window_close" to close a window,
+         *          *                "\\sprinkler_on" to turn on a sprinkler,
+         *          *                "\\sprinkler_off" to turn off a sprinkler,
+         *          *                "\\light_up" to increase light intensity,
+         *          *                "\\light_down" to decrease light intensity)
+         * This method activates an actuator by sending a CoAP command to control its behavior.
+         * The specified 'command' parameter determines the desired action for the actuator.
+         * Depending on the command, a corresponding 'command_value' is assigned.
+         *
+         * If the current status of the actuator already matches the command value,
+         * an appropriate message is printed, and the method returns without taking further action.
+         *
+         */
         String command_value;
         ResourceDAO resourceDAO;
         switch (command){
@@ -190,6 +205,21 @@ public class CLIThread extends Thread{
 
     private void setParameters(String command, String value) {
 
+        /**
+         * Sets the parameters for a specific sensor based on the provided command and value.
+         *
+         * @param command the command specifying which sensor parameter to set
+         * @param value   the value to set for the sensor parameter
+         *
+         * This method allows setting parameters for different sensors by specifying a command
+         * and a corresponding value. The 'command' parameter determines which sensor to act upon,
+         * and the 'value' parameter represents the value to set for the sensor parameter.
+         *
+         * After setting the parameter, the 'is_changed' map is updated accordingly to indicate
+         * that the parameter for the corresponding sensor has been changed.
+         *
+         */
+
         switch (command) {
             case "\\min_light_parameter":
                 LightSensor.getInstance().setMin(Integer.parseInt(value));
@@ -228,6 +258,15 @@ public class CLIThread extends Thread{
 
 
     private void send_mqtt(MqttClient client, String topic) throws MqttException {
+
+        /**
+         * Publish an MQTT message to the Broker on the specific topic.
+         *
+         * @param client  an MQTT client connected to a Broker
+         * @param topic   the topic on which do you want to publish
+         *
+         */
+
         JSONObject jsonObject = new JSONObject();
         switch(topic) {
             case "param/humidity":
