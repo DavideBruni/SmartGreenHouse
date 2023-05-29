@@ -13,6 +13,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+/**
+ * A CoAP resource for handling SQL operations on actuators.
+ *
+ * This class extends the CoapResource class and provides functionality for handling POST requests
+ * related to SQL operations on actuators. It receives JSON payloads containing information about
+ * actuators and performs database operations to store or update the information.
+ *
+ * */
+
 public class SQLResource extends CoapResource {
 
     private static final String url = "jdbc:mysql://localhost:3306/SmartGreenHouse";
@@ -23,6 +32,18 @@ public class SQLResource extends CoapResource {
         super(name);
     }
 
+
+    /**
+     * Handles incoming POST requests.
+     *
+     * This method handles incoming POST requests to the SQLResource. It expects a JSON payload containing
+     * information about the actuator, including its name and status. The method parses the JSON payload,
+     * retrieves the necessary information, and performs a REPLACE operation on the database table to store
+     * or update the actuator information. The method generates a CoAP response based on the success or failure
+     * of the database operation and sends it back to the client.
+     *
+     * @param exchange the CoapExchange object representing the CoAP request and response exchange
+     */
     public void handlePOST(CoapExchange exchange) {
         byte[] request = exchange.getRequestPayload();
         String s = new String(request);
