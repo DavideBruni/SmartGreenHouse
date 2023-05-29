@@ -1,9 +1,24 @@
 package greenHouse.unipi.it.DAO;
 
-import org.eclipse.californium.core.coap.CoAP;
-import org.eclipse.californium.core.coap.Response;
 
 import java.sql.*;
+
+/**
+ * A Data Access Object (DAO) class for retrieving and updating information about resources (actuators) from a database.
+ *
+ * This class provides methods to retrieve and update information about resources (actuators) from a MySQL database.
+ * It uses a predefined database URL, username, and password for establishing the database connection.
+ * The class stores information about the IP address, resource name, and status of an actuator.
+ *
+ * The class includes a static method 'retrieveInformation' to retrieve information about an actuator from the database.
+ * The method takes an actuator as input and returns a 'ResourceDAO' object with the corresponding IP address, resource name,
+ * and status retrieved from the database.
+ *
+ * The class includes methods for changing the status of an actuator and updating it in the database.
+ * The 'changeStatus' method updates the status of the actuator in the database, and the 'updateStatus' method updates the
+ * status based on a command. The method checks the current status and command and performs the corresponding updates.
+ *
+ */
 
 public class ResourceDAO {
 

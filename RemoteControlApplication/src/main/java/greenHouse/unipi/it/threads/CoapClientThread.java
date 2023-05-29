@@ -29,8 +29,6 @@ import org.json.simple.JSONObject;
  *    - For other response codes, prints an error message indicating an actuator error and changes
  *      the status of the actuator in 'resourceDAO' to "Error".
  *
- * Note: This class assumes the availability of the 'CoapClient' class from a CoAP library.
- *
  * @see Thread
  */
 

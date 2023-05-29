@@ -6,6 +6,19 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A thread class for polling data from a database and updating sensor values.
+ *
+ * This class extends the 'Thread' class and provides functionality to periodically poll
+ * data from a MySQL database and update the corresponding sensor values. The thread is
+ * responsible for connecting to the database, executing queries, and updating the sensor
+ * values based on the retrieved data.
+ *
+ * The class uses a predefined database URL, username, and password for establishing the
+ * database connection. It maintains a map of sensor types, a timestamp for the last read
+ * operation, and a map of values to check for changes since the last read.
+ * */
+
 public class PollingDBThread extends Thread{
     private static final String url = "jdbc:mysql://localhost:3306/SmartGreenHouse";
     private static final String username = "root";
@@ -14,6 +27,14 @@ public class PollingDBThread extends Thread{
     private static Timestamp lastTimestamp;
     private static Map<String,Integer> values;      // key --> value, in order to check only changed value wrt to the last read
 
+	/**
+	 * Constructs a 'PollingDBThread' object.
+	 *
+	 * This constructor initializes the 'lastTimestamp', 'values', and 'types' variables.
+	 * It sets the initial 'lastTimestamp' to the current timestamp, initializes an empty
+	 * 'values' map, and populates the 'types' map with the predefined sensor types and
+	 * their corresponding instances.
+	 */
     public PollingDBThread(){
         java.util.Date date = new java.util.Date();
         lastTimestamp = new java.sql.Timestamp(date.getTime());
@@ -37,7 +58,9 @@ public class PollingDBThread extends Thread{
 			
 		        java.util.Date date = new java.util.Date();
 		        Timestamp tempTimestamp = new java.sql.Timestamp(date.getTime());     // next time, I'll check if there will be command after this timestamp
-		        for (String str : types.keySet()) {
+				/* Iterates over the sensor types and executes a query to retrieve the latest value for
+ 				    each sensor type since the last timestamp. */
+				for (String str : types.keySet()) {
 		            PreparedStatement ps = connection.prepareStatement(
 		                    "SELECT value FROM dataSensed WHERE timestamp > ? AND type = ? ORDER BY timestamp DESC LIMIT 1;");
 		            ps.setTimestamp(1, lastTimestamp);
@@ -56,8 +79,11 @@ public class PollingDBThread extends Thread{
 		    }
 		    // check values
 		    if(!values.isEmpty()){                      // ResultSet was not empty
-		        for(String type : types.keySet()){      // for each kind of sensor
-		            if(values.containsKey(type)){       // check if there's a new value for each type
+				/* Checks the 'values' map to determine if there are any new values.
+					- For each sensor type with a new value, performs the corresponding actions based on the minimum and maximum thresholds of the sensor.
+				    - If the sensor type is "light" and it is currently night according to the LightSensor,the action is skipped. */
+				for(String type : types.keySet()){
+		            if(values.containsKey(type)){
 		                int value = values.get(type);
 				
 		                String action = null;
