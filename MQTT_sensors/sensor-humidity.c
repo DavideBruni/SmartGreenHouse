@@ -85,9 +85,9 @@ static uint8_t min_humidity_parameter = 60;
 static uint8_t max_humidity_parameter = 75;
 static bool alarm_state = false;
 
-#define SENSE_PERIOD 		6		// seconds
-#define SENSE_PERIOD_ON_ALERT 	3		// seconds
-#define NUM_PERIOD_BEFORE_SEND  6 		// every 36 second there's one pub
+#define SENSE_PERIOD 		15		// seconds
+#define SENSE_PERIOD_ON_ALERT 	7		// seconds
+#define NUM_PERIOD_BEFORE_SEND  3 		// every 45 second there's one pub
 
 static int num_period = 0;
 static int is_first_pub_flag = 1;

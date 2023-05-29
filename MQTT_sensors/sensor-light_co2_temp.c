@@ -107,8 +107,8 @@ static int max_co2_parameter = 400;
 static int min_temp_parameter = 15;
 static int max_temp_parameter = 20;
 
-#define SENSE_PERIOD 		6		// seconds
-#define NUM_PERIOD_BEFORE_SEND  6 		// every 36 second there's one pub
+#define SENSE_PERIOD 		15		// seconds
+#define NUM_PERIOD_BEFORE_SEND  3 		// every 45 second there's one pub
 
 static int num_period = 0;
 static int is_first_pub_flag = 1;
