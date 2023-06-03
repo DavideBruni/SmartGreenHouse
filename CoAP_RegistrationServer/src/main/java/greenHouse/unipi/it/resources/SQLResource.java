@@ -58,7 +58,7 @@ public class SQLResource extends CoapResource {
         Response response;
         if (json.containsKey("name")){
             InetAddress addr = exchange.getSourceAddress();
-		System.out.println(addr);
+		    System.out.println(addr);
             try (Connection connection = DriverManager.getConnection(url, username, password)) {
 		
                 PreparedStatement ps = connection.prepareStatement("REPLACE INTO actuators (ip,resource,status) VALUES(?,?,?);");

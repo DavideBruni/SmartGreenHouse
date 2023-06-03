@@ -142,7 +142,6 @@ PROCESS(sensor_humidity, "MQTT sensor_humidity");
 AUTOSTART_PROCESSES(&sensor_humidity);
 
 static void pub_handler_humidity(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    //sscanf((char *)chunk, "%hhd_%hhd", &min_humidity_parameter, &max_humidity_parameter);
     min_humidity_parameter = (uint8_t)findJsonField_Number((char *)chunk, "min_humidity_parameter");
     max_humidity_parameter = (uint8_t)findJsonField_Number((char *)chunk, "max_humidity_parameter");
     LOG_INFO("Humidity Pub Handler: topic=HUMIDITY, min=%hhd max=%hhd\n", min_humidity_parameter, max_humidity_parameter);

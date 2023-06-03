@@ -87,7 +87,7 @@ public class CLIThread extends Thread{
                         client.connect();
                         String content;
                         for (String topic : is_changed.keySet()) {
-                        send_mqtt(client, "param/" + topic);
+                            send_mqtt(client, "param/" + topic);
                         }
 
                         client.disconnect();

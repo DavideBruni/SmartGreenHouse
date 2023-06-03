@@ -44,7 +44,6 @@ on_connect_callbacks = {
 
 
 def mqtt_client(topic):
-	
 	client = mqtt.Client()
 	client.on_connect = on_connect_callbacks[topic]
 	client.on_message = on_message
@@ -56,7 +55,6 @@ def mqtt_client(topic):
 def main():
 	thread_humidity = Thread(target=mqtt_client, args=("humidity",))
 	thread_co2_light_temp = Thread(target=mqtt_client, args=("co2_light_temp",))
-	
 	
 	# starting threads
 	thread_humidity.start()

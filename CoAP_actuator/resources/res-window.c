@@ -12,7 +12,7 @@
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
-static uint8_t window_status = 0; // 0 closed, 1 opened
+static uint8_t window_status = 0;       // 0 closed, 1 opened
 
 static void res_put_handler(coap_message_t *request, coap_message_t *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
@@ -32,7 +32,6 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
     len = coap_get_payload(request,&chunk);
 	
     if(len>0){
-	    //sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
         action = findJsonField_String((char *)chunk, "action");
         LOG_INFO("received command: action=%s\n", action);
 	}  

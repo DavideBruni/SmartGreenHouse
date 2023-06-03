@@ -1,6 +1,5 @@
 package greenHouse.unipi.it.DAO;
 
-
 import java.sql.*;
 
 /**
@@ -54,9 +53,9 @@ public class ResourceDAO {
                 break;
             case "light":
                 resource = "actuator_light";
-		break;
-	    default:
-		return resourceDAO;
+		        break;
+	        default:
+		        return resourceDAO;
         }
         try (Connection connection = DriverManager.getConnection(url, username, password)) {
 

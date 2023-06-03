@@ -25,6 +25,15 @@ They are both Maven Project developped in JAVA. In both directory the jar file i
 ## MQTT Collector
 It's developped in python. You need to install some libraries reported on `MQTT_Collector/requirements.txt`
 
+## MySQL configuration parameters
+To deploy the project in your environment, remember to modify the database access parameters within the following files:
+<ul>
+  <li> CoAP_RegistrationServer/src/main/greenHouse/unipi/it/resources/SQLResource.java</li>
+  <li> RemotControlApplication/src/main/greenHouse/unipi/it/DAO/ResourceDAO.java</li>
+  <li> RemotControlApplication/src/main/greenHouse/unipi/it/threads/PollingDB.java</li>
+  <li> MQTT_Collector/Collector.py</li>
+</ul>
+
 ## Details
 All the details about the logic and the designed choice are reported inside the `Documentation.pdf` file.
 

@@ -107,7 +107,7 @@ static int max_co2_parameter = 400;
 static int min_temp_parameter = 15;
 static int max_temp_parameter = 20;
 
-#define SENSE_PERIOD 		15		// seconds
+#define SENSE_PERIOD 		15		    // seconds
 #define NUM_PERIOD_BEFORE_SEND  3 		// every 45 second there's one pub
 
 static int num_period = 0;
@@ -124,7 +124,7 @@ static int fake_light_sensing(){
 		}
 		if(flag_over_under == 1){		// generate value under the min treshold
 			return (rand() % min_light_parameter);			
-		}else{				// generate value over the max treshold
+		}else{				            // generate value over the max treshold
 			return rand() + max_light_parameter;
 		}
 	}
@@ -148,7 +148,7 @@ static int fake_temp_sensing(){
 		}
 		if(flag_over_under == 1){		// generate value under the min treshold
 			return (rand() % min_temp_parameter);			
-		}else{					// generate value over the max treshold
+		}else{					        // generate value over the max treshold
 			return ( rand() % 15 )  + max_temp_parameter;
 		}
 	}
@@ -192,14 +192,12 @@ PROCESS(sensor_co2_light_temp, "MQTT sensor_co2_light_temp");
 AUTOSTART_PROCESSES(&sensor_co2_light_temp);
 
 static void pub_handler_co2(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    //sscanf((char *)chunk, "{\"max_co2_parameter\":%d,\"min_co2_parameter\":%d}", &max_co2_parameter, &min_co2_parameter);
     min_co2_parameter = findJsonField_Number((char *)chunk, "min_co2_parameter");
     max_co2_parameter = findJsonField_Number((char *)chunk, "max_co2_parameter");
     LOG_INFO("CO2 Pub Handler: topic=param/co2, min=%d max=%d\n", min_co2_parameter, max_co2_parameter);
 }
 
 static void pub_handler_light(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    //sscanf((char *)chunk, "{\"max_light_parameter\":%d,\"min_light_parameter\":%d}", &max_light_parameter, &min_light_parameter);
     min_light_parameter = findJsonField_Number((char *)chunk, "min_light_parameter");
     max_light_parameter = findJsonField_Number((char *)chunk, "max_light_parameter");
     is_night = (bool)findJsonField_Number((char *)chunk, "is_night");
@@ -207,7 +205,6 @@ static void pub_handler_light(const char *topic, uint16_t topic_len, const uint8
 }
 
 static void pub_handler_temp(const char *topic, uint16_t topic_len, const uint8_t *chunk, uint16_t chunk_len){
-    //sscanf((char *)chunk, "{\"max_temp_parameter\":%d,\"min_temp_parameter\":%d}", &max_temp_parameter, &min_temp_parameter);
     min_temp_parameter = findJsonField_Number((char *)chunk, "min_temp_parameter");
     max_temp_parameter = findJsonField_Number((char *)chunk, "max_temp_parameter");
     LOG_INFO("Temp Pub Handler: topic=param/temp, min=%d max=%d\n", min_temp_parameter, max_temp_parameter);
@@ -403,13 +400,9 @@ PROCESS_THREAD(sensor_co2_light_temp, ev, data){
 			}else if(button_pressed == 4){
 				button_pressed = 0;
 				light_in_range = temp_in_range = co2_in_range = 1; // normal value
-							
 			}
             flag_over_under = -1;		
-			
-		
-	}
-
+        }
     }
 
     PROCESS_END();

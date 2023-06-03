@@ -94,7 +94,6 @@ public class PollingDBThread extends Thread{
 		                if(value < types.get(type).getMin()){
 		                    types.get(type).setActionMin();
 		                }else if(value >= types.get(type).getMax()){
-
 		                    types.get(type).setActionMax();
 		                }
 

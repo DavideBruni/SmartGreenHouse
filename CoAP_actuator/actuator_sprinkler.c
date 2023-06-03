@@ -18,7 +18,7 @@
 #define MAX_REGISTRATION_RETRY 3
 
 static coap_endpoint_t server_ep;
-static coap_message_t request[1]; /* This way  the packet can be treated as pointer as usual. */
+static coap_message_t request[1];       /* This way  the packet can be treated as pointer as usual. */
 static char *service_registration_url = "/registration";
 static int max_registration_retry = MAX_REGISTRATION_RETRY;
 
@@ -65,17 +65,14 @@ PROCESS_THREAD(sprinkler_thread, ev, data){
     
 		/* -------------- END REGISTRATION --------------*/
 		if(max_registration_retry == -1){		// something goes wrong more MAX_REGISTRATION_RETRY times, node goes to sleep then try again
-			etimer_set(&sleep_timer, 3000*CLOCK_SECOND);
+			etimer_set(&sleep_timer, 30*CLOCK_SECOND);
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sleep_timer));
 			max_registration_retry = MAX_REGISTRATION_RETRY;
 		}
 	}
     
-    
 	coap_activate_resource(&res_sprinkler, "actuator_sprinkler");
 	
-	PROCESS_YIELD();	
-	
-
-PROCESS_END();
+	PROCESS_YIELD();
+    PROCESS_END();
 }

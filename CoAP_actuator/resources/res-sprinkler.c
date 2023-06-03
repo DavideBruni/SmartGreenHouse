@@ -32,7 +32,6 @@ static void res_put_handler(coap_message_t *request, coap_message_t *response, u
     len = coap_get_payload(request,&chunk);
 	
     if(len>0){
-	    //sscanf((char *)chunk,"{\"action\":\"%[^\"]\"}",action);
         action = findJsonField_String((char *)chunk, "action");
         LOG_INFO("received command: action=%s\n", action);
 	}
