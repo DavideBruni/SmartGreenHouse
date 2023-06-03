@@ -3,7 +3,8 @@ It's project deployed for the IoT course at the University of Pisa Artificial In
 <b> Greenhouse+ </b> is an IoT system for the automation of frequent procedures in a smart greenhouse. In this project, we leverage smart sensors to monitor and optimize four key factors within the greenhouse: light intensity, temperature, soil moisture, and CO2 levels. Through the use of advanced sensor technology our goal is to enhance the efficiency, productivity, and sustainability of greenhouse cultivation. <br>
 <b> Note: all our sensors and the action of the actuators are simulated, we're mainly interested in the communication part between an MQTT network, a CoAP network and a Cloud System </b>
 ## Network architecture
-Missing images
+![network architecture](https://github.com/DavideBruni/SmartGreenHouse/blob/master/network_architecture.jpg?raw=true)
+<br>
 Note for the project deployment: The MQTT broker (Mosquitto in our scenario), the Remote Control Application and the Cloud Application are hosted on the VM provided by the teachers. If you want to deploy them in a difference place, you need to change the Broker Address in the following files:
 <ul>
   <li> MQTT_sensors/sensor-humidity.c</li>
